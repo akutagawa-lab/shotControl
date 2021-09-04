@@ -1,0 +1,66 @@
+''' ポート設定用ダイアログ
+'''
+
+import sys
+import logging
+
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtWidgets import QDialog, QMainWindow, QWidget, QApplication, QPushButton
+from PyQt5.QtWidgets import QDialogButtonBox, QVBoxLayout, QComboBox
+from PyQt5.QtWidgets import QFileDialog
+
+import stage
+
+logger = logging.getLogger(__name__)
+
+
+class portSettingDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__()
+    
+        self.setWindowTitle("Choose serial port")
+
+        buttonbox = QDialogButtonBox(
+                QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        
+        buttonbox.accepted.connect(self.accept)
+        buttonbox.rejected.connect(self.reject)
+
+        self.cbox = QComboBox()
+        self.cbox.addItems(stage.get_device_list())
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.cbox)
+        layout.addWidget(buttonbox)
+
+    def selectedPort(self):
+        return self.cbox.currentText()
+
+
+class testWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle('Blank widget for test')
+        win = QWidget()
+
+        self.setCentralWidget(win)
+
+        self.show()
+
+    def mousePressEvent(self, ev):
+        logging.debug("mousePressEvent()")
+        dlg = portSettingDialog(self)
+        ret = dlg.exec_()
+
+        if ret == QDialog.Accepted:
+            logging.debug(f"Accepted: {dlg.selectedPort()}")
+        else:
+            logging.debug("Rejected")
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    gui = testWindow()
+    sys.exit(app.exec_())
+
