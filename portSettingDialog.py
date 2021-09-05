@@ -49,14 +49,14 @@ class testWindow(QMainWindow):
         self.show()
 
     def mousePressEvent(self, ev):
-        logging.debug("mousePressEvent()")
+        logger.debug("mousePressEvent()")
         dlg = portSettingDialog(self)
         ret = dlg.exec_()
 
         if ret == QDialog.Accepted:
-            logging.debug(f"Accepted: {dlg.selectedPort()}")
+            logger.debug(f"Accepted: {dlg.selectedPort()}")
         else:
-            logging.debug("Rejected")
+            logger.debug("Rejected")
 
 
 if __name__ == "__main__":

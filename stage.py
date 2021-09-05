@@ -31,7 +31,7 @@ class stage():
         io.TextIOWrapper を使うべき'''
 
     def openSerial(self, portname):
-        logging.debug(f"stage.open(): {portname}")
+        logger.debug(f"stage.open(): {portname}")
 
     def toPulses(self, length_mm):
         '''パルスに換算'''
@@ -42,14 +42,14 @@ class stage():
         return npulses / self.npulses_per_mm
 
     def sendCommand(self, cmd):
-        logging.debug(f"sendCommand: {cmd}")
+        logger.debug(f"sendCommand: {cmd}")
 
     def cmd_go(self):
         cmd = "G:"
         self.sendCommand(cmd)
 
     def moveTo(self, pos_x, pos_y, pos_z):
-        logging.debug(f"moveTo: {pos_x} {pos_y} {pos_z}")
+        logger.debug(f"moveTo: {pos_x} {pos_y} {pos_z}")
         cmd = f"A:W{self.toPulses(pos_x):+d}{self.toPulses(pos_y):+d}{self.toPulses(pos_z):+d}"
         cmd = re.sub(r'([+-])', r'\1P', cmd)
         self.sendCommand(cmd)
