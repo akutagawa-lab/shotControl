@@ -92,13 +92,19 @@ class presetCounter(QWidget):
         self.setLayout(layout_h)
 
     def setCounterValue(self, val):
-        self.lcd_counter.display(val)
+        self.lcd_counter.display(f"{val:.3f}")
 
     def setPresetValue(self, val):
         self.lcd_preset.setValue(val)
 
     def getPresetValue(self):
-        return self.lcd_preset.value()
+        cur_val = self.lcd_counter.value()
+        preset_val = self.lcd_preset.value()
+        if self.relative is True:
+            ret = cur_val + preset_val
+        else:
+            ret = preset_val
+        return ret
 
     def setRelative(self, flag):
         cur_val = self.lcd_counter.value()
@@ -239,6 +245,21 @@ class MyWindow(QMainWindow):
         act_quit.setStatusTip('Quit application')
         act_quit.triggered.connect(qApp.quit)
 
+        act_query = QAction(self.style().standardIcon(QStyle.SP_MessageBoxInformation), '&Status', self)
+        act_query.setShortcut('Ctrl+I')
+        act_query.setStatusTip('Query info.')
+        act_query.triggered.connect(self.queryInfo)
+
+        act_go = QAction(self.style().standardIcon(QStyle.SP_MessageBoxInformation), '&Go', self)
+        act_go.setShortcut('Ctrl+G')
+        act_go.setStatusTip('Go')
+        act_go.triggered.connect(self.go)
+
+        act_stop = QAction(self.style().standardIcon(QStyle.SP_MessageBoxInformation), '&Stop', self)
+        act_stop.setShortcut('Ctrl+P')
+        act_stop.setStatusTip('Stop')
+        act_stop.triggered.connect(self.stageStop)
+
         self.posi_con.actionMoveTo.connect(self.stageMove)
         self.posi_con.actionStop.connect(self.stageStop)
 
@@ -252,6 +273,9 @@ class MyWindow(QMainWindow):
         ''' TOOL BAR '''
         self.toolbar = self.addToolBar('Main toolbar')
         self.toolbar.addAction(act_quit)
+        self.toolbar.addAction(act_query)
+        self.toolbar.addAction(act_stop)
+        self.toolbar.addAction(act_go)
 
         self.show()
 
@@ -263,6 +287,24 @@ class MyWindow(QMainWindow):
         logging.debug("Stop")
         self.stage.stop()
 
+    def queryInfo(self):
+        buf = self.stage.query()
+        logging.debug(f"queryInfo: {buf}")
+        if type(buf) is dict:
+            self.posi_con.lcd_x.setCounterValue(buf['pos_x'])
+            self.posi_con.lcd_y.setCounterValue(buf['pos_y'])
+            self.posi_con.lcd_z.setCounterValue(buf['pos_z'])
+        
+    def go(self):
+        self.posi_con.go()
+
+    def startQueryTimer():
+        query_timer = QtCore.QTimer()
+
+    def repeatQuery():
+        buf = self.query()
+        if type(buf) is dict:
+            pass
 
 def main():
     app = QApplication(sys.argv)
@@ -272,6 +314,8 @@ def main():
     else:
         gui.stage.openSerial(gui.device_name)
         gui.statusBar().showMessage(f"{gui.device_name}")
+
+    gui.queryInfo()
     sys.exit(app.exec_())
 
 

@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 class portSettingDialog(QDialog):
+    phantomPort = 'Phantom Port'
+
     def __init__(self, parent=None):
         super().__init__()
     
@@ -27,6 +29,7 @@ class portSettingDialog(QDialog):
         buttonbox.rejected.connect(self.reject)
 
         self.cbox = QComboBox()
+        self.cbox.addItem(self.phantomPort)
         self.cbox.addItems(stage.get_device_list())
 
         layout = QVBoxLayout(self)

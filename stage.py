@@ -29,9 +29,26 @@ class stage():
         self.npulses_per_mm = 500
         '''readlineを使うのが良い。
         io.TextIOWrapper を使うべき'''
+        self.phantom_port = False
 
     def openSerial(self, portname):
         logger.debug(f"stage.open(): {portname}")
+        self.serport = portname
+        self.ser = serial.Serial()
+        self.ser.port = portname
+        self.ser.baudrate = 9600
+        self.ser.bytesize = serial.EIGHTBITS
+        self.ser.parity = serial.PARITY_NONE
+        self.ser.stopbits = serial.STOPBITS_ONE
+        self.ser.timeout = 5
+
+        try:
+            self.ser.open()
+            self.phantom_port = False
+
+        except:
+            logger.info(f"stage.open(): {portname} cannot open. Phoantom port will be used.")
+            self.phantom_port = True
 
     def toPulses(self, length_mm):
         '''パルスに換算'''
@@ -43,6 +60,14 @@ class stage():
 
     def sendCommand(self, cmd):
         logger.debug(f"sendCommand: {cmd}")
+        if self.phantom_port is True:
+            buf = 'OK'
+        else:
+            self.ser.write((cmd + '\r\n').encode('utf-8'))
+            buf = self.ser.readline()
+            buf = buf.strip().decode('utf-8')
+
+        return buf
 
     def cmd_go(self):
         cmd = "G:"
@@ -59,6 +84,24 @@ class stage():
         cmd = "L:W"
         self.sendCommand(cmd)
 
+    def query(self):
+        ret = self.sendCommand("Q:")
+        logger.debug(f"query(): {ret}")
+        ret = re.sub('\s', '', ret)
+        res = re.split(',', ret)
+        if len(res) == 7:
+            qres = {
+                    'pos_x':self.toMM(int(res[0])),
+                    'pos_y':self.toMM(int(res[1])),
+                    'pos_z':self.toMM(int(res[2])),
+                    'ack1':res[4],
+                    'ack2':res[5],
+                    'ack3':res[6],
+                }
+        else:
+            qres = ret
+
+        return qres
 
 def get_device_list():
     '''シリアルポートのdevice名のリストを得る'''
