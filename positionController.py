@@ -147,6 +147,8 @@ class positionController(QWidget):
     '''
     actionMoveTo = QtCore.pyqtSignal(float, float, float)
     actionStop = QtCore.pyqtSignal()
+    actionResetOrigin = QtCore.pyqtSignal()
+    actionMechanicalOrigin = QtCore.pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -170,12 +172,16 @@ class positionController(QWidget):
 
 
         self.btn_cancel = QPushButton("Cancel")
+        self.btn_resetOrigin = QPushButton("Reset Origin")
+        self.btn_mechOrigin = QPushButton("ABS. Origin")
         self.chk_relative = QCheckBox("Relative")
         self.btn_stop = QPushButton("STOP")
         self.btn_go = QPushButton("GO")
 
         self.chk_relative.stateChanged.connect(self.relativeStateChanged)
         self.btn_cancel.pressed.connect(self.cancelPreset)
+        self.btn_resetOrigin.pressed.connect(self.resetOrigin)
+        self.btn_mechOrigin.pressed.connect(self.mechanicalOrigin)
         self.btn_go.pressed.connect(self.go)
         self.btn_stop.pressed.connect(self.stop)
 
@@ -183,6 +189,8 @@ class positionController(QWidget):
         layout_right_panel = QVBoxLayout()
         layout_counters.addLayout(layout_right_panel, 0)
 
+        layout_right_panel.addWidget(self.btn_mechOrigin)
+        layout_right_panel.addWidget(self.btn_resetOrigin)
         layout_right_panel.addWidget(self.btn_cancel)
         layout_right_panel.addWidget(self.chk_relative)
         layout_buttons.addWidget(self.btn_stop)
@@ -210,6 +218,12 @@ class positionController(QWidget):
         self.lcd_x.cancelPreset()
         self.lcd_y.cancelPreset()
         self.lcd_z.cancelPreset()
+
+    def resetOrigin(self):
+        self.actionResetOrigin.emit()
+
+    def mechanicalOrigin(self):
+        self.actionMechanicalOrigin.emit()
 
     def go(self):
         self.actionMoveTo.emit(

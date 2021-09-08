@@ -103,6 +103,16 @@ class stage():
 
         return qres
 
+    def resetOrigin(self):
+        '''電気（論理）原点のリセット．現在位置を原点に設定'''
+        cmd = "R:W"
+        self.sendCommand(cmd)
+
+    def gotoMechanicalOrigin(self):
+        '''機械原点復帰．機械原点に移動'''
+        cmd = "H:W"
+        self.sendCommand(cmd)
+
 def get_device_list():
     '''シリアルポートのdevice名のリストを得る'''
 
