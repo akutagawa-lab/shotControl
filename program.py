@@ -6,6 +6,8 @@ import logging
 import numpy as np
 import pandas as pd
 
+logger = logging.getLogger(__name__)
+
 class stageProgram:
     '''ステージのプラグラムクラス'''
     def __init__(self):
