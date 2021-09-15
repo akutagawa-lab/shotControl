@@ -113,6 +113,19 @@ class stage():
         cmd = "H:W"
         self.sendCommand(cmd)
 
+    def isReady(self):
+        '''Readyかどうか'''
+        cmd = "!:"
+        status = self.sendCommand(cmd)
+        if self.phantom_port is True:
+            ret = True
+        else:
+            if status == "R":
+                ret = True
+            else:
+                ret = False
+        return ret
+
 def get_device_list():
     '''シリアルポートのdevice名のリストを得る'''
 

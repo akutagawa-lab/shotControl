@@ -14,6 +14,7 @@ class stageProgram:
         self.df = pd.DataFrame(columns=('pos_x', 'pos_y', 'pos_z', 'interval'))
 
     def setPosition(self, xxx, yyy, zzz, interval=1):
+        '''meshgrid で生成された numpy.ndarray からプログラムを生成'''
         xs = xxx.flatten()
         ys = yyy.flatten()
         zs = zzz.flatten()
@@ -22,21 +23,24 @@ class stageProgram:
         self.df['pos_z'] = zs
         self.df['interval'] = np.ones_like(xs) * interval
 
+    def paramByIndex(self, idx):
+        '''インデックス指定でプログラムパラメータを取得'''
+        return self.df.loc[idx]
+
     def to_csv(self, filename='prog.csv'):
+        '''CSVの書き出し'''
         self.df.to_csv(filename, index_label='idx')
 
     def read_csv(self, filename='prog.csv'):
+        '''CSVの読み込み'''
         self.df = pd.read_csv(filename, header=0, index_col=0)
 
-        print(self.df)
 
-def test_data():
+def test_data(
+        range_x=(10, 20), range_y=(100, 150), range_z=(30, 40),
+        pos_step=1, interval=1 ):
+
     prog = stageProgram()
-
-    pos_step = 1
-    range_x = (10, 20)
-    range_y = (100, 200)
-    range_z = (30, 40)
 
     xx = np.arange(range_x[0], range_x[1] + pos_step, pos_step)
     yy = np.arange(range_y[0], range_y[1] + pos_step, pos_step)
@@ -44,7 +48,7 @@ def test_data():
 
     xxx, yyy, zzz = np.meshgrid(xx, yy, zz)
 
-    prog.setPosition(xxx, yyy, zzz)
+    prog.setPosition(xxx, yyy, zzz, interval=interval)
 
     return prog
 

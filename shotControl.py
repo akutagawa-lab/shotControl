@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QWidget, QMainWindow, qApp, QApplication, QHBoxLayou
 from PyQt5.QtWidgets import QPushButton, QLabel, QLCDNumber, QLineEdit, QCheckBox
 from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.QtWidgets import QAction
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QFileDialog
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QTableWidgetSelectionRange
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt
@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 class MyWindow(QMainWindow):
     ''' メインウィンドウ '''
     QUERY_INTERVAL = 250
+
     def __init__(self):
         super().__init__()
 
@@ -59,38 +60,74 @@ class MyWindow(QMainWindow):
         self.prog_table = QTableWidget()
         layout.addWidget(self.prog_table)
         self.prog_table.cellClicked.connect(self.tableSelectRow)
+        self.prog_table.currentCellChanged.connect(
+                self.actionCurrentCellChanged)
+        self.prog_table.cellChanged.connect(self.actionCurrentCellValueChanged)
 
         self.setCentralWidget(win)
 
-        act_quit = QAction(self.style().standardIcon(QStyle.SP_DialogCancelButton), '&Quit', self)
+        act_quit = QAction(
+                self.style().standardIcon(QStyle.SP_DialogCancelButton),
+                '&Quit', self)
         act_quit.setShortcut('Ctrl+Q')
         act_quit.setStatusTip('Quit application')
         act_quit.triggered.connect(qApp.quit)
 
-        act_query = QAction(self.style().standardIcon(QStyle.SP_MessageBoxInformation), '&Status', self)
+        act_query = QAction(
+                self.style().standardIcon(QStyle.SP_MessageBoxInformation),
+                '&Status', self)
         act_query.setShortcut('Ctrl+I')
         act_query.setStatusTip('Query info.')
         act_query.triggered.connect(self.queryInfo)
 
-        act_go = QAction(self.style().standardIcon(QStyle.SP_DialogApplyButton), '&Go', self)
+        act_go = QAction(
+                self.style().standardIcon(QStyle.SP_DialogApplyButton),
+                '&Go', self)
         act_go.setShortcut('Ctrl+G')
         act_go.setStatusTip('Go')
         act_go.triggered.connect(self.go)
 
-        act_stop = QAction(self.style().standardIcon(QStyle.SP_BrowserStop), '&Stop', self)
+        act_stop = QAction(
+                self.style().standardIcon(QStyle.SP_BrowserStop),
+                '&Stop', self)
         act_stop.setShortcut('Ctrl+T')
         act_stop.setStatusTip('Stop')
         act_stop.triggered.connect(self.stageStop)
 
-        act_prog_next = QAction(self.style().standardIcon(QStyle.SP_ArrowDown), '&Next', self)
+        act_prog_next = QAction(
+                self.style().standardIcon(QStyle.SP_ArrowDown),
+                '&Next', self)
         act_prog_next.setShortcut('Ctrl+N')
         act_prog_next.setStatusTip('Next')
         act_prog_next.triggered.connect(self.progNextStep)
 
-        act_prog_prev = QAction(self.style().standardIcon(QStyle.SP_ArrowUp), '&Previous', self)
+        act_prog_prev = QAction(
+                self.style().standardIcon(QStyle.SP_ArrowUp),
+                '&Previous', self)
         act_prog_prev.setShortcut('Ctrl+P')
         act_prog_prev.setStatusTip('Previous')
         act_prog_prev.triggered.connect(self.progPrevStep)
+
+        act_prog_open = QAction(
+                self.style().standardIcon(QStyle.SP_DialogOpenButton),
+                '&Open', self)
+        act_prog_open.setShortcut('Ctrl+O')
+        act_prog_open.setStatusTip('Open program file')
+        act_prog_open.triggered.connect(self.actionOpenProgram)
+
+        act_prog_save = QAction(
+                self.style().standardIcon(QStyle.SP_DialogSaveButton),
+                '&Save', self)
+        act_prog_save.setShortcut('Ctrl+S')
+        act_prog_save.setStatusTip('Save program as ...')
+        act_prog_save.triggered.connect(self.actionSaveProgram)
+
+        act_prog_new = QAction(
+                self.style().standardIcon(QStyle.SP_FileIcon),
+                '&New', self)
+        # act_prog_new.setShortcut('Ctrl+N')
+        act_prog_new.setStatusTip('Create new program')
+        act_prog_new.triggered.connect(self.actionNewProgram)
 
         self.posi_con.actionMoveTo.connect(self.stageMove)
         self.posi_con.actionStop.connect(self.stageStop)
@@ -108,6 +145,11 @@ class MyWindow(QMainWindow):
         # TOOL BAR
         self.toolbar = self.addToolBar('Main toolbar')
         self.toolbar.addAction(act_quit)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(act_prog_new)
+        self.toolbar.addAction(act_prog_open)
+        self.toolbar.addAction(act_prog_save)
+        self.toolbar.addSeparator()
         self.toolbar.addAction(act_query)
         self.toolbar.addAction(act_stop)
         self.toolbar.addAction(act_go)
@@ -179,46 +221,105 @@ class MyWindow(QMainWindow):
         self.queryInfo()
 
     def setProgramData(self, prog):
+        '''ステージプログラムをセット'''
         self.program = prog
+
+        self.prog_table.cellChanged.disconnect(
+                self.actionCurrentCellValueChanged)
 
         self.prog_table.setColumnCount(self.program.df.shape[1])
         self.prog_table.setRowCount(self.program.df.shape[0])
 
-        self.prog_table.setHorizontalHeaderLabels(self.program.df.columns.to_list())
+        self.prog_table.setHorizontalHeaderLabels(
+                self.program.df.columns.to_list())
         for r in range(self.program.df.shape[0]):
             for c in range(self.program.df.shape[1]):
                 item = QTableWidgetItem(f"{self.program.df.iat[r, c]:.3f}")
                 flags = item.flags()
-                flags = flags & (~ (Qt.ItemFlag.ItemIsEditable ))
+                # flags = flags & (~ (Qt.ItemFlag.ItemIsEditable ))
                 item.setFlags(flags)
                 self.prog_table.setItem(r, c, item)
 
         self.prog_table.setVerticalHeaderLabels(
                 [f"{idx}" for idx in self.program.df.index.to_list()])
 
+        self.prog_table.cellChanged.connect(self.actionCurrentCellValueChanged)
+
     def progNextStep(self):
+        '''プログラムを次のステップに進める'''
         cur_row = self.prog_table.currentRow()
         cur_col = 0
         logger.debug("progNextStep: currentRow:%d", cur_row)
-        cur_row = cur_row + 1
+        cur_row = min(cur_row + 1, self.prog_table.rowCount() - 1)
+        self.prog_table.setCurrentCell(cur_row, cur_col)
         self.tableSelectRow(cur_row, 0)
 
     def progPrevStep(self):
+        '''プログラムを前のステップに戻す'''
         cur_row = self.prog_table.currentRow()
         cur_col = 0
         logger.debug("progPrevStep: currentRow:%d", cur_row)
-        cur_row = cur_row - 1
-        if cur_row < 0:
-            cur_row = 0
+        cur_row = max(cur_row - 1, 0)
+        self.prog_table.setCurrentCell(cur_row, cur_col)
         self.tableSelectRow(cur_row, 0)
 
     def tableSelectRow(self, row, col=0):
-        logger.debug("cell_clicked: row:%d, col:%d", row, col)
+        '''テーブル内の行を選択する'''
+        logger.debug(
+                "tableSelectRow: row:%d, col:%d"
+                "  currentRow:%d currentColumn:%d columnCount:%d",
+                row, col,
+                self.prog_table.currentRow(), self.prog_table.currentColumn(),
+                self.prog_table.columnCount())
         for r in self.prog_table.selectedRanges():
+            logger.debug("tableSelectRow: SelectedRange.topRow:%d", r.topRow())
             self.prog_table.setRangeSelected(r, False)
-        self.prog_table.setCurrentCell(row, col)
+        # self.prog_table.setCurrentCell(row, col)
         self.prog_table.setRangeSelected(
-                QTableWidgetSelectionRange(row, 3, row, 0), True)
+                QTableWidgetSelectionRange(
+                    row, self.prog_table.columnCount()-1, row, 0), True)
+        param = self.program.paramByIndex(row)
+        self.posi_con.setPresetValue(
+                param['pos_x'], param['pos_y'], param['pos_z'], relative=False)
+        logger.debug(
+                "x:%f y:%f z:%f int:%f",
+                param['pos_x'], param['pos_y'],
+                param['pos_z'], param['interval'])
+
+    def actionCurrentCellChanged(self, cur_row, cur_col, prev_row, prev_col):
+        logger.debug("actionCurrentCellChanged: cur_row: %d", cur_row)
+        self.tableSelectRow(cur_row)
+
+    def actionCurrentCellValueChanged(self, row, column):
+        logger.debug(
+                "actionCurrentCellValueChanged: row:%d, column:%d",
+                row, column)
+        new_celltext = self.prog_table.item(row, column).text()
+        new_cellvalue = float(new_celltext)
+        new_celltext = f"{float(new_cellvalue):.3f}"
+        self.program.df.iloc[row, column] = new_cellvalue
+        self.prog_table.cellChanged.disconnect(
+                self.actionCurrentCellValueChanged)
+        self.prog_table.item(row, column).setText(new_celltext)
+        self.prog_table.cellChanged.connect(self.actionCurrentCellValueChanged)
+        self.tableSelectRow(row, column)
+
+    def actionNewProgram(self):
+        logger.debug("actionNewProgram()")
+
+    def actionOpenProgram(self):
+        logger.debug("actionOpenProgram()")
+        fname = QFileDialog.getOpenFileName(
+                self, caption='Open Program File', filter="CSV (*.csv)")
+        if fname[0] != '':
+            logger.debug("    fname: %s", fname)
+
+
+    def actionSaveProgram(self):
+        logger.debug("actionSaveProgram()")
+        fname = QFileDialog.getSaveFileName(self, 'Save Program File')
+        logger.debug("    fname: %s", fname)
+
 
 def main():
     ''' メイン関数 '''
