@@ -1,9 +1,9 @@
 ''' ステージのクラス
 '''
 
-import sys
 import re
-import io
+# import sys
+# import io
 import logging
 
 import serial
@@ -30,9 +30,15 @@ class stage():
         '''readlineを使うのが良い。
         io.TextIOWrapper を使うべき'''
         self.phantom_port = False
+        self.ser = None
+        self.serport = None
+        self.rom_version = "dummy"
+        self.distance_per_pulse = [1.0, 1.0, 1.0, 1.0]
+        self.divisions = [2, 2, 2, 2]
 
     def openSerial(self, portname):
-        logger.debug(f"stage.open(): {portname}")
+        ''' シリアルポートを開く '''
+        logger.debug("stage.open(): %s", portname)
         self.serport = portname
         self.ser = serial.Serial()
         self.ser.port = portname
@@ -47,7 +53,9 @@ class stage():
             self.phantom_port = False
 
         except:
-            logger.info(f"stage.open(): {portname} cannot open. Phoantom port will be used.")
+            logger.info(
+                    "stage.open():"
+                    "%s cannot open. Phoantom port will be used.", portname)
             self.phantom_port = True
 
     def toPulses(self, length_mm):
@@ -59,7 +67,22 @@ class stage():
         return npulses / self.npulses_per_mm
 
     def sendCommand(self, cmd):
-        logger.debug(f"sendCommand: {cmd}")
+        '''コマンドを送出する
+
+        もしファントムポートであれば（stage.phantom_port is True）
+        何もしない
+
+        Parameter
+        ----------
+        cmd: string
+            送出コマンド
+
+        Return
+        ------
+        status: string
+            ステージからの返り値
+        '''
+        logger.debug("sendCommand: %s", cmd)
         if self.phantom_port is True:
             buf = 'OK'
         else:
@@ -69,25 +92,54 @@ class stage():
 
         return buf
 
+    def getInfo(self):
+        ''' ステージの内部情報を取得する
+
+        取得した結果は，
+            stage.rom_version
+            stage.distance_per_pulse
+            stage.divisions
+        に代入される．
+        ファントムポートの場合は何もしない
+        （適当なデフォルト値がセットされている）
+        '''
+
+        if self.phantom_port is not True:
+            self.rom_version = self.sendCommand("?:V")
+            buf = self.sendCommand("?:PW")
+            dpp = re.split(r'\s*,\s*', buf)
+            self.distance_per_pulse = [float(v) for v in dpp]
+            buf = self.sendCommand("?:SW")
+            div = re.split(r'\s*,\s*', buf)
+            self.divisions = [int(d) for d in div]
+
+        logger.debug("rom_version:%s", self.rom_version)
+        logger.debug("distance_per_pulse: %s", f"{self.distance_per_pulse}")
+        logger.debug("divisions: %s", f"{self.divisions}")
+
     def cmd_go(self):
+        ''' G: を送出 '''
         cmd = "G:"
         self.sendCommand(cmd)
 
     def moveTo(self, pos_x, pos_y, pos_z):
-        logger.debug(f"moveTo: {pos_x} {pos_y} {pos_z}")
+        ''' 指定した位置に移動する '''
+        logger.debug("moveTo: %f %f %f", pos_x, pos_y, pos_z)
         cmd = f"A:W{self.toPulses(pos_x):+d}{self.toPulses(pos_y):+d}{self.toPulses(pos_z):+d}"
         cmd = re.sub(r'([+-])', r'\1P', cmd)
         self.sendCommand(cmd)
         self.cmd_go()
-    
+
     def stop(self):
+        ''' ステージの移動を停止する '''
         cmd = "L:W"
         self.sendCommand(cmd)
 
     def query(self):
+        '''現在の状態を問い合わせる'''
         ret = self.sendCommand("Q:")
-        logger.debug(f"query(): {ret}")
-        ret = re.sub('\s', '', ret)
+        logger.debug("query(): %s", ret)
+        ret = re.sub(r'\s', '', ret)
         res = re.split(',', ret)
         if len(res) == 7:
             qres = {
@@ -120,10 +172,7 @@ class stage():
         if self.phantom_port is True:
             ret = True
         else:
-            if status == "R":
-                ret = True
-            else:
-                ret = False
+            ret = (status == "R")
         return ret
 
 def get_device_list():
@@ -134,4 +183,3 @@ def get_device_list():
     for p in ports:
         device_list.append(p.device)
     return device_list
-

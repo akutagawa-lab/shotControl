@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+''' シグマ光機 SHOT-304GS コントロールプログラム
+'''
 
 import sys
 import re
@@ -46,6 +48,7 @@ class MyWindow(QMainWindow):
 
         self.query_timer = QtCore.QTimer()
         self.query_timer.timeout.connect(self.queryInfo)
+
 
     def initUI(self):
         ''' UIの初期化 '''
@@ -159,6 +162,7 @@ class MyWindow(QMainWindow):
         self.show()
 
     def showStatus(self, msg=""):
+        ''' status bar に情報表示 '''
         msgs = []
         if self.device_name is None:
             msgs.append('Port:None')
@@ -170,7 +174,8 @@ class MyWindow(QMainWindow):
 
     def stageMove(self, pos_x, pos_y, pos_z):
         '''指定された位置にステージを移動'''
-        logging.debug(f"MoveTo: {pos_x}, {pos_y}, {pos_z}")
+        logging.debug(
+                "MoveTo: pos_x:%d, pos_y:%d, pos_z:%d", pos_x, pos_y, pos_z)
         self.stage.moveTo(pos_x, pos_y, pos_z)
         self.query_timer.start(self.QUERY_INTERVAL)
 
@@ -287,10 +292,12 @@ class MyWindow(QMainWindow):
                 param['pos_z'], param['interval'])
 
     def actionCurrentCellChanged(self, cur_row, cur_col, prev_row, prev_col):
+        ''' current cell（の位置）が変更されたときのaction '''
         logger.debug("actionCurrentCellChanged: cur_row: %d", cur_row)
         self.tableSelectRow(cur_row)
 
     def actionCurrentCellValueChanged(self, row, column):
+        ''' current cellの内容が変更されたときのaction '''
         logger.debug(
                 "actionCurrentCellValueChanged: row:%d, column:%d",
                 row, column)
@@ -305,9 +312,11 @@ class MyWindow(QMainWindow):
         self.tableSelectRow(row, column)
 
     def actionNewProgram(self):
+        ''' 新規プログラムの action '''
         logger.debug("actionNewProgram()")
 
     def actionOpenProgram(self):
+        ''' open が選ばれたときの action '''
         logger.debug("actionOpenProgram()")
         fname = QFileDialog.getOpenFileName(
                 self, caption='Open Program File', filter="CSV (*.csv)")
@@ -316,6 +325,7 @@ class MyWindow(QMainWindow):
 
 
     def actionSaveProgram(self):
+        ''' save が選ばれたときの action '''
         logger.debug("actionSaveProgram()")
         fname = QFileDialog.getSaveFileName(self, 'Save Program File')
         logger.debug("    fname: %s", fname)
@@ -330,6 +340,8 @@ def main():
     else:
         gui.stage.openSerial(gui.device_name)
         gui.showStatus()
+
+        gui.stage.getInfo()
 
     gui.initPreset()
 
