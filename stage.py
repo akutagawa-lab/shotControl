@@ -52,7 +52,7 @@ class stage():
             self.ser.open()
             self.phantom_port = False
 
-        except:
+        except serial.SerialException:
             logger.info(
                     "stage.open():"
                     "%s cannot open. Phoantom port will be used.", portname)
@@ -125,7 +125,9 @@ class stage():
     def moveTo(self, pos_x, pos_y, pos_z):
         ''' 指定した位置に移動する '''
         logger.debug("moveTo: %f %f %f", pos_x, pos_y, pos_z)
-        cmd = f"A:W{self.toPulses(pos_x):+d}{self.toPulses(pos_y):+d}{self.toPulses(pos_z):+d}"
+        cmd = (f"A:W{self.toPulses(pos_x):+d}"
+               f"{self.toPulses(pos_y):+d}"
+               f"{self.toPulses(pos_z):+d}")
         cmd = re.sub(r'([+-])', r'\1P', cmd)
         self.sendCommand(cmd)
         self.cmd_go()
@@ -143,12 +145,12 @@ class stage():
         res = re.split(',', ret)
         if len(res) == 7:
             qres = {
-                    'pos_x':self.toMM(int(res[0])),
-                    'pos_y':self.toMM(int(res[1])),
-                    'pos_z':self.toMM(int(res[2])),
-                    'ack1':res[4],
-                    'ack2':res[5],
-                    'ack3':res[6],
+                    'pos_x': self.toMM(int(res[0])),
+                    'pos_y': self.toMM(int(res[1])),
+                    'pos_z': self.toMM(int(res[2])),
+                    'ack1': res[4],
+                    'ack2': res[5],
+                    'ack3': res[6],
                 }
         else:
             qres = ret
@@ -174,6 +176,7 @@ class stage():
         else:
             ret = (status == "R")
         return ret
+
 
 def get_device_list():
     '''シリアルポートのdevice名のリストを得る'''
