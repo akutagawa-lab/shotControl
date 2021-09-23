@@ -3,8 +3,8 @@
 '''
 
 import sys
-import re
 import logging
+import argparse
 
 from PyQt5.QtWidgets import QWidget, QMainWindow, qApp, QApplication, QHBoxLayout, QVBoxLayout, QStyle
 from PyQt5.QtWidgets import QPushButton, QLabel, QLCDNumber, QLineEdit, QCheckBox
@@ -48,7 +48,6 @@ class MyWindow(QMainWindow):
 
         self.query_timer = QtCore.QTimer()
         self.query_timer.timeout.connect(self.queryInfo)
-
 
     def initUI(self):
         ''' UIの初期化 '''
@@ -323,7 +322,6 @@ class MyWindow(QMainWindow):
         if fname[0] != '':
             logger.debug("    fname: %s", fname)
 
-
     def actionSaveProgram(self):
         ''' save が選ばれたときの action '''
         logger.debug("actionSaveProgram()")
@@ -350,5 +348,15 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+            "-v", "--verbose", help="increase verbosity level",
+            action="count", default=0)
+    args = parser.parse_args()
+
+    if args.verbose > 0:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
+
     main()
