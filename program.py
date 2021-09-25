@@ -8,6 +8,7 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+
 class stageProgram:
     '''ステージのプラグラムクラス'''
     def __init__(self):
@@ -38,7 +39,7 @@ class stageProgram:
 
 def test_data(
         range_x=(10, 20), range_y=(100, 150), range_z=(30, 40),
-        pos_step=1, interval=1 ):
+        pos_step=1, interval=1):
 
     prog = stageProgram()
 
@@ -52,6 +53,7 @@ def test_data(
 
     return prog
 
+
 def test():
     '''テストコード'''
 
@@ -60,6 +62,7 @@ def test():
     prog.read_csv('prog.csv')
 
     print(prog)
+
 
 if __name__ == '__main__':
     test()

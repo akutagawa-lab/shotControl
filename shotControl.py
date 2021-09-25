@@ -69,7 +69,7 @@ class MyWindow(QMainWindow):
         self.setCentralWidget(win)
 
         act_quit = QAction(
-                self.style().standardIcon(QStyle.SP_DialogCancelButton),
+                self.style().standardIcon(QStyle.SP_DialogCloseButton),
                 '&Quit', self)
         act_quit.setShortcut('Ctrl+Q')
         act_quit.setStatusTip('Quit application')
@@ -131,6 +131,18 @@ class MyWindow(QMainWindow):
         act_prog_new.setStatusTip('Create new program')
         act_prog_new.triggered.connect(self.actionNewProgram)
 
+        act_prog_run = QAction(
+                self.style().standardIcon(QStyle.SP_MediaPlay),
+                '&Run', self)
+        act_prog_run.setStatusTip('Run program')
+        act_prog_run.triggered.connect(self.actionRun)
+
+        act_prog_stop = QAction(
+                self.style().standardIcon(QStyle.SP_MediaStop),
+                '&Stop', self)
+        act_prog_stop.setStatusTip('Stop program')
+        act_prog_stop.triggered.connect(self.actionStopProgram)
+
         self.posi_con.actionMoveTo.connect(self.stageMove)
         self.posi_con.actionStop.connect(self.stageStop)
         self.posi_con.actionResetOrigin.connect(self.resetOrigin)
@@ -151,12 +163,14 @@ class MyWindow(QMainWindow):
         self.toolbar.addAction(act_prog_new)
         self.toolbar.addAction(act_prog_open)
         self.toolbar.addAction(act_prog_save)
-        self.toolbar.addSeparator()
+        self.toolbar.addSeparator()  # -------
         self.toolbar.addAction(act_query)
         self.toolbar.addAction(act_stop)
         self.toolbar.addAction(act_go)
         self.toolbar.addAction(act_prog_prev)
         self.toolbar.addAction(act_prog_next)
+        self.toolbar.addSeparator()  # -------
+        self.toolbar.addAction(act_prog_run)
 
         self.show()
 
@@ -233,7 +247,8 @@ class MyWindow(QMainWindow):
 
         self.prog_table.setColumnCount(self.program.df.shape[1])
         self.prog_table.setRowCount(self.program.df.shape[0])
-
+        logging.debug("setProgramData(): row:%d  column:%d",
+                      self.program.df.shape[0], self.program.df.shape[1])
         self.prog_table.setHorizontalHeaderLabels(
                 self.program.df.columns.to_list())
         for r in range(self.program.df.shape[0]):
@@ -320,14 +335,28 @@ class MyWindow(QMainWindow):
         fname = QFileDialog.getOpenFileName(
                 self, caption='Open Program File', filter="CSV (*.csv)")
         if fname[0] != '':
-            logger.debug("    fname: %s", fname)
+            logger.debug("    fname: %s", fname[0])
+            prog_opened = program.stageProgram()
+            prog_opened.read_csv(fname[0])
+            self.setProgramData(prog_opened)
 
     def actionSaveProgram(self):
         ''' save が選ばれたときの action '''
         logger.debug("actionSaveProgram()")
         fname = QFileDialog.getSaveFileName(self, 'Save Program File')
-        logger.debug("    fname: %s", fname)
+        if fname[0] != '':
+            logger.debug("    fname: %s", fname[0])
+            self.program.to_csv(fname[0])
 
+    def actionRun(self):
+        ''' run '''
+        logger.debug("actionRun()")
+        pass
+
+    def actionStopProgram(self):
+        ''' stop program '''
+        logger.debug("actionStopProgram")
+        pass
 
 def main():
     ''' メイン関数 '''
