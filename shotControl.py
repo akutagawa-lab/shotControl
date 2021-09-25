@@ -34,6 +34,7 @@ class MyWindow(QMainWindow):
         self.width = 800
         self.height = 600
         self.device_name = None
+        self.flag_prog_run = False
 
         self.stage = stage.stage()
         self.program = program.stageProgram()
@@ -170,6 +171,7 @@ class MyWindow(QMainWindow):
         self.toolbar.addAction(act_prog_prev)
         self.toolbar.addAction(act_prog_next)
         self.toolbar.addSeparator()  # -------
+        self.toolbar.addAction(act_prog_stop)
         self.toolbar.addAction(act_prog_run)
 
         self.show()
@@ -293,7 +295,8 @@ class MyWindow(QMainWindow):
         for r in self.prog_table.selectedRanges():
             logger.debug("tableSelectRow: SelectedRange.topRow:%d", r.topRow())
             self.prog_table.setRangeSelected(r, False)
-        # self.prog_table.setCurrentCell(row, col)
+        if self.prog_table.currentRow() != row:
+            self.prog_table.setCurrentCell(row, col)
         self.prog_table.setRangeSelected(
                 QTableWidgetSelectionRange(
                     row, self.prog_table.columnCount()-1, row, 0), True)
@@ -351,12 +354,20 @@ class MyWindow(QMainWindow):
     def actionRun(self):
         ''' run '''
         logger.debug("actionRun()")
-        pass
+        if self.flag_prog_run is False:
+            self.flag_prog_run = True
+            cur_row = self.prog_table.currentRow()
+            if cur_row < 0:
+                cur_row = 0
+            self.tableSelectRow(cur_row)
+            logger.debug("actionRun(): cur_row:%d", cur_row)
 
     def actionStopProgram(self):
         ''' stop program '''
         logger.debug("actionStopProgram")
-        pass
+        if self.flag_prog_run is True:
+            self.flag_prog_run = False
+
 
 def main():
     ''' メイン関数 '''
