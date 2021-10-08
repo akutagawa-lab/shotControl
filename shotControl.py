@@ -49,6 +49,8 @@ class MyWindow(QMainWindow):
 
         self.query_timer = QtCore.QTimer()
         self.query_timer.timeout.connect(self.queryInfo)
+        self.interval_timer = QtCore.QTimer()
+        self.interval_timer.timeout.connect(self.intervalTimeup)
 
     def initUI(self):
         ''' UIの初期化 '''
@@ -132,17 +134,18 @@ class MyWindow(QMainWindow):
         act_prog_new.setStatusTip('Create new program')
         act_prog_new.triggered.connect(self.actionNewProgram)
 
-        act_prog_run = QAction(
+        self.act_prog_run = QAction(
                 self.style().standardIcon(QStyle.SP_MediaPlay),
                 '&Run', self)
-        act_prog_run.setStatusTip('Run program')
-        act_prog_run.triggered.connect(self.actionRun)
+        self.act_prog_run.setStatusTip('Run program')
+        self.act_prog_run.triggered.connect(self.actionRun)
 
-        act_prog_stop = QAction(
+        self.act_prog_stop = QAction(
                 self.style().standardIcon(QStyle.SP_MediaStop),
                 '&Stop', self)
-        act_prog_stop.setStatusTip('Stop program')
-        act_prog_stop.triggered.connect(self.actionStopProgram)
+        self.act_prog_stop.setStatusTip('Stop program')
+        self.act_prog_stop.triggered.connect(self.actionStopProgram)
+        self.act_prog_stop.setEnabled(False)
 
         self.posi_con.actionMoveTo.connect(self.stageMove)
         self.posi_con.actionStop.connect(self.stageStop)
@@ -171,8 +174,8 @@ class MyWindow(QMainWindow):
         self.toolbar.addAction(act_prog_prev)
         self.toolbar.addAction(act_prog_next)
         self.toolbar.addSeparator()  # -------
-        self.toolbar.addAction(act_prog_stop)
-        self.toolbar.addAction(act_prog_run)
+        self.toolbar.addAction(self.act_prog_stop)
+        self.toolbar.addAction(self.act_prog_run)
 
         self.show()
 
@@ -202,7 +205,14 @@ class MyWindow(QMainWindow):
         self.queryInfo()
 
     def queryInfo(self):
-        ''' ステージの状態を取得し，posi_con を更新'''
+        ''' ステージの状態を取得し，posi_con を更新
+
+        ステージ移動時にquery_timerがtimeup したとき呼ばれる．
+        ステージがreadyとなればquery_timerを停止
+        このときプログラムが run 中であれば
+        目的位置まで移動完了したことになるので次のステップを
+        実行する．
+        '''
         buf = self.stage.query()
         logging.debug("queryInfo: %s", buf)
         if isinstance(buf, dict):
@@ -213,8 +223,25 @@ class MyWindow(QMainWindow):
                 self.showStatus('Ready')
                 if self.query_timer.isActive():
                     self.query_timer.stop()
+                if ((self.flag_prog_run is True) and (self.interval_timer.isActive() is not True)):
+                    # interval_timer を開始
+                    cur_row = self.prog_table.currentRow()
+                    param = self.program.paramByIndex(cur_row)
+                    interval = param['interval'] * 1000
+                    logging.debug("\tcur_row: %d: interval:%f",
+                                  cur_row, interval)
+                    self.interval_timer.start(interval)
             else:
                 self.showStatus('Busy')
+
+    def intervalTimeup(self):
+        ''' インターバルタイマーがTimeupしたときに呼ばれる '''
+        logger.debug("intervalTimer()")
+        self.interval_timer.stop()
+        # オシロ用のトリガを出力
+        if self.flag_prog_run is True:
+            self.progNextStep()
+            self.go()
 
     def go(self):
         '''プリセット位置にステージを移動'''
@@ -271,7 +298,11 @@ class MyWindow(QMainWindow):
         cur_row = self.prog_table.currentRow()
         cur_col = 0
         logger.debug("progNextStep: currentRow:%d", cur_row)
-        cur_row = min(cur_row + 1, self.prog_table.rowCount() - 1)
+        if cur_row+1 < self.prog_table.rowCount():
+            cur_row = cur_row + 1
+        elif self.flag_prog_run is True:
+            self.actionStopProgram()
+        # cur_row = min(cur_row + 1, self.prog_table.rowCount() - 1)
         self.prog_table.setCurrentCell(cur_row, cur_col)
         self.tableSelectRow(cur_row, 0)
 
@@ -356,17 +387,23 @@ class MyWindow(QMainWindow):
         logger.debug("actionRun()")
         if self.flag_prog_run is False:
             self.flag_prog_run = True
+            self.act_prog_run.setEnabled(False)
+            self.act_prog_stop.setEnabled(True)
             cur_row = self.prog_table.currentRow()
             if cur_row < 0:
                 cur_row = 0
             self.tableSelectRow(cur_row)
             logger.debug("actionRun(): cur_row:%d", cur_row)
+            self.posi_con.go()
 
     def actionStopProgram(self):
         ''' stop program '''
         logger.debug("actionStopProgram")
         if self.flag_prog_run is True:
+            self.interval_timer.stop()
             self.flag_prog_run = False
+            self.act_prog_run.setEnabled(True)
+            self.act_prog_stop.setEnabled(False)
 
 
 def main():

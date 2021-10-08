@@ -35,6 +35,7 @@ class stage():
         self.rom_version = "dummy"
         self.distance_per_pulse = [1.0, 1.0, 1.0, 1.0]
         self.divisions = [2, 2, 2, 2]
+        self.last_move_to = [0, 0, 0]
 
     def openSerial(self, portname):
         ''' シリアルポートを開く '''
@@ -131,6 +132,7 @@ class stage():
         cmd = re.sub(r'([+-])', r'\1P', cmd)
         self.sendCommand(cmd)
         self.cmd_go()
+        self.last_move_to = [pos_x, pos_y, pos_z]
 
     def stop(self):
         ''' ステージの移動を停止する '''
@@ -153,7 +155,14 @@ class stage():
                     'ack3': res[6],
                 }
         else:
-            qres = ret
+            qres = {
+                    'pos_x': self.last_move_to[0],
+                    'pos_y': self.last_move_to[1],
+                    'pos_z': self.last_move_to[2],
+                    'ack1': 'X',
+                    'ack2': 'X',
+                    'ack3': 'R'
+                }
 
         return qres
 
