@@ -17,9 +17,11 @@ logger = logging.getLogger(__name__)
 class portSettingDialog(QDialog):
     phantomPort = 'Phantom Port'
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, candidate_device=None):
         super().__init__()
     
+        logger.debug('portSettingDialog.__init__(): candidate_divice: %s',
+                candidate_device)
         self.setWindowTitle("Choose serial port")
 
         buttonbox = QDialogButtonBox(
@@ -31,6 +33,9 @@ class portSettingDialog(QDialog):
         self.cbox = QComboBox()
         self.cbox.addItem(self.phantomPort)
         self.cbox.addItems(stage.get_device_list())
+        matched_idx = self.cbox.findText(candidate_device)
+        if matched_idx >= 0:
+            self.cbox.setCurrentIndex(matched_idx)
 
         layout = QVBoxLayout(self)
         layout.addWidget(self.cbox)

@@ -5,6 +5,7 @@
 import sys
 import logging
 import argparse
+from socket import gethostname
 
 from PyQt5.QtWidgets import QWidget, QMainWindow, qApp, QApplication, QHBoxLayout, QVBoxLayout, QStyle
 from PyQt5.QtWidgets import QPushButton, QLabel, QLCDNumber, QLineEdit, QCheckBox
@@ -19,6 +20,7 @@ import stage
 import portSettingDialog
 import positionController
 import program
+import config
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +29,7 @@ class MyWindow(QMainWindow):
     ''' メインウィンドウ '''
     QUERY_INTERVAL = 250
 
-    def __init__(self):
+    def __init__(self, conf):
         super().__init__()
 
         self.title = 'SHOT-304GS Controller'
@@ -41,9 +43,11 @@ class MyWindow(QMainWindow):
 
         self.initUI()
 
-        dlg_port = portSettingDialog.portSettingDialog(self)
+        dlg_port = portSettingDialog.portSettingDialog(self,
+                candidate_device=conf['device_name'])
         if dlg_port.exec_() == QDialog.Accepted:
             self.device_name = dlg_port.selectedPort()
+            conf['device_name'] = self.device_name
         else:
             self.device_name = None
 
@@ -389,9 +393,7 @@ class MyWindow(QMainWindow):
             self.flag_prog_run = True
             self.act_prog_run.setEnabled(False)
             self.act_prog_stop.setEnabled(True)
-            cur_row = self.prog_table.currentRow()
-            if cur_row < 0:
-                cur_row = 0
+            cur_row = max(self.prog_table.currentRow(), 0)
             self.tableSelectRow(cur_row)
             logger.debug("actionRun(): cur_row:%d", cur_row)
             self.posi_con.go()
@@ -405,11 +407,13 @@ class MyWindow(QMainWindow):
             self.act_prog_run.setEnabled(True)
             self.act_prog_stop.setEnabled(False)
 
-
 def main():
     ''' メイン関数 '''
+    entire_conf = config.readFile()
+    conf = entire_conf[gethostname()]
+
     app = QApplication(sys.argv)
-    gui = MyWindow()
+    gui = MyWindow(conf)
     if gui.device_name is None:
         sys.exit()
     else:
@@ -421,7 +425,10 @@ def main():
     gui.initPreset()
 
     gui.setProgramData(program.test_data())
-    sys.exit(app.exec_())
+
+    status = app.exec_()
+    config.updateFile(entire_conf)
+    sys.exit(status)
 
 
 if __name__ == "__main__":
