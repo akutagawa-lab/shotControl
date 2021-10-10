@@ -21,7 +21,7 @@ class portSettingDialog(QDialog):
         super().__init__()
     
         logger.debug('portSettingDialog.__init__(): candidate_divice: %s',
-                candidate_device)
+                     candidate_device)
         self.setWindowTitle("Choose serial port")
 
         buttonbox = QDialogButtonBox(
