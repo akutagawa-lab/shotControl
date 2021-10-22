@@ -11,6 +11,8 @@ import serial.tools.list_ports
 
 logger = logging.getLogger(__name__)
 
+IO_ON = 1
+IO_OFF = 0
 
 class stage():
     ''' XYZステージクラス
@@ -36,6 +38,7 @@ class stage():
         self.distance_per_pulse = [1.0, 1.0, 1.0, 1.0]
         self.divisions = [2, 2, 2, 2]
         self.last_move_to = [0, 0, 0]
+        self.io_out = 0
 
     def openSerial(self, portname):
         ''' シリアルポートを開く '''
@@ -186,6 +189,43 @@ class stage():
             ret = (status == "R")
         return ret
 
+    def digitalWriteBulk(self, val:int=0):
+        '''I/Oコネクタに出力状態を一括設定する
+
+        Parameters:
+        -----------
+            val:
+                 [OUT4][OUT3][OUT2][OUT1] のバイナリ表現
+                 0 - 15 以外はビット演算により0になる
+        '''
+        logger.info("digitalWriteBulk(): val:%04x", val)
+        self.io_out = val & 0b1111
+        cmd = f"O:{self.io_out}"
+        self.sendCommand(cmd)
+
+    def digitalWrite(self, ch:int, on_off:int):
+        '''I/Oコネクタへの出力状態を設定する
+
+        Parameters:
+        -----------
+            ch:
+                チャネル番号（1 | 2 | 3 | 4）
+                OUT1 から OUT4 までが 1 から 4 に対応する
+            on_off:
+                stage.IO_ON または stage.IO_OFF
+                stage.IO_ON は出力トランジスタが ON
+                stage.IO_OFF は出力トランジスタが OFF
+        '''
+        logger.info("digitalWrite(): ch:%d  on_off:%d", ch, on_off)
+        if ch < 0 or ch > 4:
+            logger.error("digitalWrite(): ch is output of range:%d", ch )
+            return
+        mask = 1 << (ch - 1)
+        if on_off == IO_ON:
+            o_pattern = self.io_out | mask
+        elif on_off == IO_OFF:
+            o_pattern = self.io_out & (~mask & 0b1111)
+        self.digitalWriteBulk(o_pattern)
 
 def get_device_list():
     '''シリアルポートのdevice名のリストを得る'''
