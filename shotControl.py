@@ -19,6 +19,7 @@ from PyQt5.QtCore import Qt
 import stage
 import portSettingDialog
 import positionController
+import ioMonitor
 import program
 import config
 
@@ -61,10 +62,19 @@ class MyWindow(QMainWindow):
         self.setWindowTitle(self.title)
         self.setGeometry(0, 0, self.width, self.height)
         win = QWidget()
+        # 全体はQVBoxLayout
+        # posi_con : positionController
+        # io_monitor : ioMonitor
+        # prog_table : QTableWidget
         layout = QVBoxLayout(win)
+
 
         self.posi_con = positionController.positionController()
         layout.addWidget(self.posi_con, 0)
+        self.io_monitor = ioMonitor.ioMonitor(output_num=4)
+        layout.addWidget(self.io_monitor)
+        self.io_monitor.buttonPressed.connect(self.actionOutputOn)
+        self.io_monitor.buttonReleased.connect(self.actionOutputOff)
 
         self.prog_table = QTableWidget()
         layout.addWidget(self.prog_table)
@@ -406,6 +416,16 @@ class MyWindow(QMainWindow):
             self.flag_prog_run = False
             self.act_prog_run.setEnabled(True)
             self.act_prog_stop.setEnabled(False)
+    
+    def actionOutputOn(self, ch):
+        ''' Output Button is presssed '''
+        logger.debug("actionOutputOn: %d", ch)
+        self.stage.digitalWrite(ch, stage.IO_ON)
+
+    def actionOutputOff(self, ch):
+        ''' Output Button is released '''
+        logger.debug("actionOutputOff: %d", ch)
+        self.stage.digitalWrite(ch, stage.IO_OFF)
 
 def main():
     ''' メイン関数 '''
