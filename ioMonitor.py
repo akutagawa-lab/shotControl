@@ -6,7 +6,7 @@ import logging
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout
 from PyQt5.QtWidgets import QPushButton
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore
 
 logger = logging.getLogger(__name__)
 
@@ -45,23 +45,25 @@ class ioMonitor(QWidget):
     def btn_pressed(self):
         '''ボタンが押された時'''
         btn = self.sender()
-        self.btn_lamp_on(btn.index)
+        # self.btn_lamp_on(btn.index)
         self.buttonPressed.emit(btn.index)
         logger.debug("ioMonitor.btn_pressed(): %s %d", btn.text(), btn.index)
 
     def btn_released(self):
         '''ボタンが離された時'''
         btn = self.sender()
-        self.btn_lamp_off(btn.index)
+        # self.btn_lamp_off(btn.index)
         self.buttonReleased.emit(btn.index)
         logger.debug("ioMonitor.btn_released(): %s %d", btn.text(), btn.index)
 
     def btn_lamp_on(self, btn_id):
         '''ボタンのランプをオンにする'''
+        logger.debug("ioMonitor.btn_lamp_on(): %d", btn_id)
         self.btn_out[btn_id].setStyleSheet(
                 f"QPushButton {{{self.ST_BUTTON_ON}}}")
 
     def btn_lamp_off(self, btn_id):
         '''ボタンのランプをオフにする'''
+        logger.debug("ioMonitor.btn_lamp_off(): %d", btn_id)
         self.btn_out[btn_id].setStyleSheet(
                 f"QPushButton {{{self.ST_BUTTON_OFF}}}")

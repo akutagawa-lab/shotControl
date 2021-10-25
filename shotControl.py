@@ -6,6 +6,7 @@ import sys
 import logging
 import argparse
 from socket import gethostname
+import time
 
 from PyQt5.QtWidgets import QWidget, QMainWindow, qApp, QApplication, QHBoxLayout, QVBoxLayout, QStyle
 from PyQt5.QtWidgets import QPushButton, QLabel, QLCDNumber, QLineEdit, QCheckBox
@@ -29,6 +30,9 @@ logger = logging.getLogger(__name__)
 class MyWindow(QMainWindow):
     ''' メインウィンドウ '''
     QUERY_INTERVAL = 250
+
+    OSCI_TRIGGER_DURATION = 0.1
+    OSCI_TRIGGER_CHANNEL = 1
 
     def __init__(self, conf):
         super().__init__()
@@ -252,7 +256,12 @@ class MyWindow(QMainWindow):
         ''' インターバルタイマーがTimeupしたときに呼ばれる '''
         logger.debug("intervalTimer()")
         self.interval_timer.stop()
+
         # オシロ用のトリガを出力
+        self.outputOn(self.OSCI_TRIGGER_CHANNEL)
+        time.sleep(self.OSCI_TRIGGER_DURATION)
+        self.outputOff(self.OSCI_TRIGGER_CHANNEL)
+
         if self.flag_prog_run is True:
             self.progNextStep()
             self.go()
@@ -416,16 +425,28 @@ class MyWindow(QMainWindow):
             self.flag_prog_run = False
             self.act_prog_run.setEnabled(True)
             self.act_prog_stop.setEnabled(False)
-    
+
+    def outputOn(self, ch):
+        ''' 指定されたチャネルの出力をON '''
+        logger.debug("outputOn: %d", ch)
+        self.stage.digitalWrite(ch, stage.IO_ON)
+        self.io_monitor.btn_lamp_on(ch)
+
+    def outputOff(self, ch):
+        ''' 指定されたチャネルの出力をOff '''
+        logger.debug("outputOn: %d", ch)
+        self.stage.digitalWrite(ch, stage.IO_OFF)
+        self.io_monitor.btn_lamp_off(ch)
+
     def actionOutputOn(self, ch):
         ''' Output Button is presssed '''
         logger.debug("actionOutputOn: %d", ch)
-        self.stage.digitalWrite(ch, stage.IO_ON)
+        self.outputOn(ch)
 
     def actionOutputOff(self, ch):
         ''' Output Button is released '''
         logger.debug("actionOutputOff: %d", ch)
-        self.stage.digitalWrite(ch, stage.IO_OFF)
+        self.outputOff(ch)
 
 def main():
     ''' メイン関数 '''
