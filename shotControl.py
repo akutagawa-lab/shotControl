@@ -31,7 +31,7 @@ class MyWindow(QMainWindow):
     ''' メインウィンドウ '''
     QUERY_INTERVAL = 250
 
-    OSCI_TRIGGER_DURATION = 0.1
+    OSCI_TRIGGER_DURATION = 0.5
     OSCI_TRIGGER_CHANNEL = 1
 
     def __init__(self, conf):
@@ -60,6 +60,8 @@ class MyWindow(QMainWindow):
         self.query_timer.timeout.connect(self.queryInfo)
         self.interval_timer = QtCore.QTimer()
         self.interval_timer.timeout.connect(self.intervalTimeup)
+        self.trigger_timer = QtCore.QTimer()
+        self.trigger_timer.timeout.connect(self.triggerTimeup)
 
     def initUI(self):
         ''' UIの初期化 '''
@@ -241,7 +243,7 @@ class MyWindow(QMainWindow):
                 self.showStatus('Ready')
                 if self.query_timer.isActive():
                     self.query_timer.stop()
-                if ((self.flag_prog_run is True) and (self.interval_timer.isActive() is not True)):
+                if ((self.flag_prog_run is True) and (self.trigger_timer.isActive() is not True)):
                     # interval_timer を開始
                     cur_row = self.prog_table.currentRow()
                     param = self.program.paramByIndex(cur_row)
@@ -249,6 +251,7 @@ class MyWindow(QMainWindow):
                     logging.debug("\tcur_row: %d: interval:%f",
                                   cur_row, interval)
                     self.interval_timer.start(interval)
+                    self.trigger_timer.start(interval + self.OSCI_TRIGGER_DURATION)
             else:
                 self.showStatus('Busy')
 
@@ -259,7 +262,12 @@ class MyWindow(QMainWindow):
 
         # オシロ用のトリガを出力
         self.outputOn(self.OSCI_TRIGGER_CHANNEL)
-        time.sleep(self.OSCI_TRIGGER_DURATION)
+
+    def triggerTimeup(self):
+        '''トリガ信号用のTimerup処理 '''
+        logger.debug("triggerTimer()")
+        self.trigger_timer.stop()
+
         self.outputOff(self.OSCI_TRIGGER_CHANNEL)
 
         if self.flag_prog_run is True:

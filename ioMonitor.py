@@ -61,6 +61,7 @@ class ioMonitor(QWidget):
         logger.debug("ioMonitor.btn_lamp_on(): %d", btn_id)
         self.btn_out[btn_id].setStyleSheet(
                 f"QPushButton {{{self.ST_BUTTON_ON}}}")
+        self.update()
 
     def btn_lamp_off(self, btn_id):
         '''ボタンのランプをオフにする'''
