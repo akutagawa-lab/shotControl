@@ -251,7 +251,7 @@ class MyWindow(QMainWindow):
                     logging.debug("\tcur_row: %d: interval:%f",
                                   cur_row, interval)
                     self.interval_timer.start(interval)
-                    self.trigger_timer.start(interval + self.OSCI_TRIGGER_DURATION)
+                    self.trigger_timer.start(int(interval + self.OSCI_TRIGGER_DURATION))
             else:
                 self.showStatus('Busy')
 
