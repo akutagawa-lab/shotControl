@@ -23,6 +23,19 @@ The script writes out various information to the terminal (standard output).
 
 Further information of optional arguments will be shown by `-h` or `--help` option.
 
+### Serial port selection
+![Serial Port Selection](doc/dlgSerialSelect.png)
+
+Available serial ports are listed in drop down menu.
+***Phantom Port*** is dummy port for check the sequence.
+
+Press ***OK*** to proceed to the main window, or ***Cancel*** to quit immediately.
+
+
+### Main window
+![Main Window](doc/winMain.png)
+
+
 # miniterm での通信
 
 ```
