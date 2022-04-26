@@ -31,7 +31,8 @@ class MyWindow(QMainWindow):
     ''' メインウィンドウ '''
     QUERY_INTERVAL = 250
 
-    OSCI_TRIGGER_DURATION = 0.5
+    # unit of DURATION is [ms]
+    OSCI_TRIGGER_DURATION = 100
     OSCI_TRIGGER_CHANNEL = 1
 
     def __init__(self, conf):
@@ -251,21 +252,25 @@ class MyWindow(QMainWindow):
                     logging.debug("\tcur_row: %d: interval:%f",
                                   cur_row, interval)
                     self.interval_timer.start(interval)
-                    self.trigger_timer.start(int(interval + self.OSCI_TRIGGER_DURATION))
             else:
                 self.showStatus('Busy')
 
     def intervalTimeup(self):
-        ''' インターバルタイマーがTimeupしたときに呼ばれる '''
+        ''' インターバルタイマーがTimeupしたときに呼ばれる。
+            ポストインターバル処理の開始
+        '''
         logger.debug("intervalTimer()")
         self.interval_timer.stop()
 
         # オシロ用のトリガを出力
+        self.trigger_timer.start(int(self.OSCI_TRIGGER_DURATION))
         self.outputOn(self.OSCI_TRIGGER_CHANNEL)
 
     def triggerTimeup(self):
-        '''トリガ信号用のTimerup処理 '''
-        logger.debug("triggerTimer()")
+        '''トリガ信号用のTimeup処理
+            ポストインターバル処理終了
+        '''
+        logger.debug("triggerTimeup()")
         self.trigger_timer.stop()
 
         self.outputOff(self.OSCI_TRIGGER_CHANNEL)
