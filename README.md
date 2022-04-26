@@ -100,5 +100,11 @@ copy
 origin
 ```
 
+`-u`オプション（`--set-upstream`オプション）を使って，`push` + 切り替え
+```sh
+$ git -u origin main
+```
+`origin` がリモートリポジトリ名，`main`はブランチ名。ブランチ名は省略できるかも。
+`-u`をつけなければ`push`のみ。
 
 
