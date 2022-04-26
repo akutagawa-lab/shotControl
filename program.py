@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class stageProgram:
-    '''ステージのプラグラムクラス'''
+    '''ステージのプログラムクラス'''
     def __init__(self):
         self.df = pd.DataFrame(columns=('pos_x', 'pos_y', 'pos_z', 'interval'))
 
@@ -40,6 +40,7 @@ class stageProgram:
 def test_data(
         range_x=(10, 20), range_y=(100, 150), range_z=(30, 40),
         pos_step=1, interval=1):
+    '''テストデータの作成'''
 
     prog = stageProgram()
 
