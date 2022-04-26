@@ -203,10 +203,15 @@ class positionController(QWidget):
 
         self.btn_cancel = QPushButton("Cancel")
         self.btn_resetOrigin = QPushButton("Reset Origin")
+        self.btn_resetOrigin.setToolTip("Reset origin as current position")
         self.btn_mechOrigin = QPushButton("ABS. Origin")
+        self.btn_mechOrigin.setToolTip("Go to the absolute origin")
         self.chk_relative = QCheckBox("Relative")
+        self.chk_relative.setToolTip("Show destinate position as relative coordinate")
         self.btn_stop = QPushButton("STOP")
+        self.btn_stop.setToolTip("Stop immediately")
         self.btn_go = QPushButton("GO")
+        self.btn_go.setToolTip("Go to destinate position")
 
         self.chk_relative.stateChanged.connect(self.relativeStateChanged)
         self.btn_cancel.pressed.connect(self.cancelPreset)
