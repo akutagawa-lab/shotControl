@@ -22,7 +22,7 @@ class ioMonitor(QWidget):
     def __init__(self, output_num=4):
         super().__init__()
 
-        logger.debug('ioMonitor.__init__()')
+        logger.debug('__init__()')
 
         layout_base = QVBoxLayout()
         layout_base.setContentsMargins(0, 0, 0, 0)
@@ -47,24 +47,25 @@ class ioMonitor(QWidget):
         btn = self.sender()
         # self.btn_lamp_on(btn.index)
         self.buttonPressed.emit(btn.index)
-        logger.debug("ioMonitor.btn_pressed(): %s %d", btn.text(), btn.index)
+        logger.debug("btn_pressed(): %s %d", btn.text(), btn.index)
 
     def btn_released(self):
         '''ボタンが離された時'''
         btn = self.sender()
         # self.btn_lamp_off(btn.index)
         self.buttonReleased.emit(btn.index)
-        logger.debug("ioMonitor.btn_released(): %s %d", btn.text(), btn.index)
+        logger.debug("btn_released(): %s %d", btn.text(), btn.index)
 
     def btn_lamp_on(self, btn_id):
         '''ボタンのランプをオンにする'''
-        logger.debug("ioMonitor.btn_lamp_on(): %d", btn_id)
+        logger.debug("btn_lamp_on(): %d", btn_id)
         self.btn_out[btn_id].setStyleSheet(
                 f"QPushButton {{{self.ST_BUTTON_ON}}}")
-        self.update()
+        self.btn_out[btn_id].update()
 
     def btn_lamp_off(self, btn_id):
         '''ボタンのランプをオフにする'''
-        logger.debug("ioMonitor.btn_lamp_off(): %d", btn_id)
+        logger.debug("btn_lamp_off(): %d", btn_id)
         self.btn_out[btn_id].setStyleSheet(
                 f"QPushButton {{{self.ST_BUTTON_OFF}}}")
+        self.btn_out[btn_id].update()
