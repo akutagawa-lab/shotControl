@@ -124,13 +124,13 @@ class presetCounter(QWidget):
         cur_val = self.lcd_counter.value()
         if relative_flag is None:
             pval = val
-        elif relative_flag == True:
-            if self.relative == True:
+        elif relative_flag is True:
+            if self.relative is True:
                 pval = val
             else:
                 pval = cur_val + val
-        elif relative_flag == False:
-            if self.relative == True:
+        elif relative_flag is False:
+            if self.relative is True:
                 pval = val - cur_val
             else:
                 pval = val
