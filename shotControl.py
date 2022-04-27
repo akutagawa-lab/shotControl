@@ -64,8 +64,10 @@ class MyWindow(QMainWindow):
         self.query_timer.timeout.connect(self.queryInfo)
         self.settling_timer = QtCore.QTimer()
         self.settling_timer.timeout.connect(self.settlingTimeup)
+        self.settling_timer.setSingleShot(True)
         self.trigger_timer = QtCore.QTimer()
         self.trigger_timer.timeout.connect(self.triggerTimeup)
+        self.trigger_timer.setSingleShot(True)
 
     def initUI(self):
         ''' UIの初期化 '''
@@ -260,6 +262,8 @@ class MyWindow(QMainWindow):
                     # programの現在の行を取得
                     cur_row = self.prog_table.currentRow()
                     param = self.program.paramByIndex(cur_row)
+                    # repetitionsを取得
+                    self.remaining_count = param['repetitions']
                     # settling_timer を開始
                     settling_time = param['settling_time'] * 1000
                     self.settling_timer.start(settling_time)
@@ -270,8 +274,9 @@ class MyWindow(QMainWindow):
                     else:
                         self.outputOff(self.TICK_CHANNEL)
 
-                    logging.debug("\tcur_row: %d: settling_time:%f, tick1:%d",
-                                  cur_row, settling_time, tick1)
+                    logging.debug("\tcur_row: %d: settling_time:%f, tick1:%d repetition:%d",
+                                  cur_row, settling_time, tick1,
+                                  self.remaining_count)
             else:
                 self.showStatus('Busy')
 
@@ -279,8 +284,8 @@ class MyWindow(QMainWindow):
         ''' インターバルタイマーがTimeupしたときに呼ばれる。
             ポストインターバル処理の開始
         '''
-        logger.debug("settlingTimer()")
-        self.settling_timer.stop()
+        logger.debug("settlingTimeup()")
+        #self.settling_timer.stop()
 
         # オシロ用のトリガを出力
         self.trigger_timer.start(int(self.OSCI_TRIGGER_DURATION))
@@ -291,13 +296,19 @@ class MyWindow(QMainWindow):
             ポストインターバル処理終了
         '''
         logger.debug("triggerTimeup()")
-        self.trigger_timer.stop()
+        #self.trigger_timer.stop()
 
         self.outputOff(self.OSCI_TRIGGER_CHANNEL)
 
-        if self.flag_prog_run is True:
-            self.progNextStep()
-            self.go()
+        self.remaining_count -= 1
+        if self.remaining_count > 0:
+            logger.debug("settling_timer is restarted. self.remaining_count: %d",
+                    self.remaining_count)
+            self.settling_timer.start()
+        else:
+            if self.flag_prog_run is True:
+                self.progNextStep()
+                self.go()
 
     def go(self):
         '''プリセット位置にステージを移動'''
@@ -446,13 +457,15 @@ class MyWindow(QMainWindow):
                     [params['y_start'], params['y_stop']],
                     [params['z_start'], params['z_stop']],
                     params['x_step'],
-                    settling_time=params['settling_time'])
+                    settling_time=params['settling_time'],
+                    repetitions=params['repetitions'])
         elif params['mode'] == createProgramDialog.PROGRAM_MODE_CUBE:
             prog.generateGridPosition(
                     [params['x_start'], params['x_stop'], params['x_step']],
                     [params['y_start'], params['y_stop'], params['y_step']],
                     [params['z_start'], params['z_stop'], params['z_step']],
-                    settling_time=params['settling_time'])
+                    settling_time=params['settling_time'],
+                    repetitions=params['repetitions'])
         self.setProgramData(prog)
 
 

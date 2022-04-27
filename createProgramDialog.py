@@ -26,7 +26,7 @@ DEFAULT_PARAMS = {
         'y_start' : 100.0, 'y_stop' : 150.0, 'y_step' : 1.0,
         'z_start' : 30.0, 'z_stop' : 40.0, 'z_step' : 1.0,
         'settling_time' : 1.0,
-        'repetition' : 1
+        'repetitions' : 1
         }
 
 class createProgramDialog(QDialog):
@@ -90,6 +90,9 @@ class createProgramDialog(QDialog):
         layout_settling_time.addWidget(QLabel("Settling time [s]:"))
         self.le_settling_time = QLineEdit()
         layout_settling_time.addWidget(self.le_settling_time)
+        layout_settling_time.addWidget(QLabel("Repetitions:"))
+        self.le_repetitions = QLineEdit()
+        layout_settling_time.addWidget(self.le_repetitions)
 
         layout_axes.addWidget(self.le_x_start, 1, 1)
         layout_axes.addWidget(self.le_x_stop, 1, 2)
@@ -147,6 +150,7 @@ class createProgramDialog(QDialog):
         self.params['z_stop'] = float(self.le_z_stop.text())
         self.params['z_step'] = float(self.le_z_step.text())
         self.params['settling_time'] = float(self.le_settling_time.text())
+        self.params['repetitions'] = int(self.le_repetitions.text())
 
     def storeParamsToConfig(self, conf):
         for k in DEFAULT_PARAMS.keys():
@@ -192,6 +196,7 @@ class createProgramDialog(QDialog):
         self.le_z_step.setText(str(self.params['z_step']))
 
         self.le_settling_time.setText(str(self.params['settling_time']))
+        self.le_repetitions.setText(str(self.params['repetitions']))
 
 class testWindow(QMainWindow):
     def __init__(self):
