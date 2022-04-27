@@ -20,6 +20,14 @@ PROGRAM_MODE_LINE = 0
 PROGRAM_MODE_SURFACE = 1
 PROGRAM_MODE_CUBE = 2
 
+DEFAULT_PARAMS = {
+        'mode' : PROGRAM_MODE_CUBE,
+        'x_start' : 10.0, 'x_stop' : 20.0, 'x_step' : 1.0,
+        'y_start' : 100.0, 'y_stop' : 150.0, 'y_step' : 1.0,
+        'z_start' : 30.0, 'z_stop' : 40.0, 'z_step' : 1.0,
+        'interval' : 1.0,
+        }
+
 class createProgramDialog(QDialog):
 
     def __init__(self, parent=None):
@@ -139,41 +147,50 @@ class createProgramDialog(QDialog):
         self.params['z_step'] = float(self.le_z_step.text())
         self.params['interval'] = float(self.le_interval.text())
 
-    def setPlaceHolder(self, mode=None,
-            x_start=None, x_stop=None, x_step=None,
-            y_start=None, y_stop=None, y_step=None,
-            z_start=None, z_stop=None, z_step=None,
-            interval=None):
-        if mode == PROGRAM_MODE_LINE:
+    def storeParamsToConfig(self, conf):
+        for k in DEFAULT_PARAMS.keys():
+            if k in self.params:
+                if isinstance(self.params[k], str) is True:
+                    conf[k] = self.params[k]
+                else:
+                    conf[k] = str(self.params[k])
+
+    def restoreParamsFromConfig(self, conf):
+        for k, def_v in DEFAULT_PARAMS.items():
+            if k in conf:
+                if isinstance(def_v, bool) is True:
+                    if conf[k].lower() == 'true':
+                        self.params[k] = True
+                    else:
+                        self.params[k] = False
+                elif isinstance(def_v, int) is True:
+                    self.params[k] = int(conf[k])
+                elif isinstance(def_v, float) is True:
+                    self.params[k] = float(conf[k])
+            else:
+                self.params[k] = def_v
+
+    def setPlaceHolderFromParams(self):
+        if self.params['mode'] == PROGRAM_MODE_LINE:
             self.rb_1d.toggle()
-        elif mode == PROGRAM_MODE_SURFACE:
+        elif self.params['mode'] == PROGRAM_MODE_SURFACE:
             self.rb_2d.toggle()
-        elif mode == PROGRAM_MODE_CUBE:
+        elif self.params['mode'] == PROGRAM_MODE_CUBE:
             self.rb_3d.toggle()
 
-        if x_start is not None:
-            self.le_x_start.setText(str(x_start))
-        if x_stop is not None:
-            self.le_x_stop.setText(str(x_stop))
-        if x_step is not None:
-            self.le_x_step.setText(str(x_step))
+        self.le_x_start.setText(str(self.params['x_start']))
+        self.le_x_stop.setText(str(self.params['x_stop']))
+        self.le_x_step.setText(str(self.params['x_step']))
 
-        if y_start is not None:
-            self.le_y_start.setText(str(y_start))
-        if y_stop is not None:
-            self.le_y_stop.setText(str(y_stop))
-        if y_step is not None:
-            self.le_y_step.setText(str(y_step))
+        self.le_y_start.setText(str(self.params['y_start']))
+        self.le_y_stop.setText(str(self.params['y_stop']))
+        self.le_y_step.setText(str(self.params['y_step']))
 
-        if z_start is not None:
-            self.le_z_start.setText(str(z_start))
-        if z_stop is not None:
-            self.le_z_stop.setText(str(z_stop))
-        if z_step is not None:
-            self.le_z_step.setText(str(z_step))
+        self.le_z_start.setText(str(self.params['z_start']))
+        self.le_z_stop.setText(str(self.params['z_stop']))
+        self.le_z_step.setText(str(self.params['z_step']))
 
-        if interval is not None:
-            self.le_interval.setText(str(interval))
+        self.le_interval.setText(str(self.params['interval']))
 
 class testWindow(QMainWindow):
     def __init__(self):
@@ -190,10 +207,9 @@ class testWindow(QMainWindow):
         logger.debug("mousePressEvent()")
         dlg = createProgramDialog(self)
 
-        dlg.setPlaceHolder(x_start=0.0, x_stop=10.0, x_step=1.0)
-        dlg.setPlaceHolder(y_start=0.0, y_stop=10.0, y_step=1.0)
-        dlg.setPlaceHolder(z_start=0.0, z_stop=10.0, z_step=1.0)
-        dlg.setPlaceHolder(interval=1.0)
+        conf = {}
+        dlg.restoreParamsFromConfig(conf)
+        dlg.setPlaceHolderFromParams()
 
         ret = dlg.exec_()
 

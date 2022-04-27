@@ -23,6 +23,7 @@ import positionController
 import ioMonitor
 import program
 import config
+import createProgramDialog
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class MyWindow(QMainWindow):
     def __init__(self, conf):
         super().__init__()
 
+        self.conf = conf
         self.title = 'SHOT-304GS Controller'
         self.width = 800
         self.height = 600
@@ -50,10 +52,10 @@ class MyWindow(QMainWindow):
         self.initUI()
 
         dlg_port = portSettingDialog.portSettingDialog(self,
-                candidate_device=conf['device_name'])
+                candidate_device=self.conf['device_name'])
         if dlg_port.exec_() == QDialog.Accepted:
             self.device_name = dlg_port.selectedPort()
-            conf['device_name'] = self.device_name
+            self.conf['device_name'] = self.device_name
         else:
             self.device_name = None
 
@@ -407,6 +409,32 @@ class MyWindow(QMainWindow):
     def actionNewProgram(self):
         ''' 新規プログラムの action '''
         logger.debug("actionNewProgram()")
+        dlg = createProgramDialog.createProgramDialog(self)
+        dlg.restoreParamsFromConfig(self.conf)
+        dlg.setPlaceHolderFromParams()
+        ret = dlg.exec_()
+
+        if ret == QDialog.Accepted:
+            logger.debug("Accepted: ")
+            logger.debug(f"mode: {dlg.mode}")
+            logger.debug(f"params: {dlg.params}")
+            self.renewProgram(dlg.params)
+            dlg.storeParamsToConfig(self.conf)
+        else:
+            logger.debug("Rejected")
+
+    def renewProgram(self, params):
+        ''' プログラムを更新する '''
+        logger.debug('renewProgram()')
+
+        prog = program.stageProgram()
+        prog.generateGridPosition(
+                [params['x_start'], params['x_stop'], params['x_step']],
+                [params['y_start'], params['y_stop'], params['y_step']],
+                [params['z_start'], params['z_stop'], params['z_step']],
+                params['interval'])
+        self.setProgramData(prog)
+
 
     def actionOpenProgram(self):
         ''' open が選ばれたときの action '''
