@@ -35,7 +35,7 @@ class MyWindow(QMainWindow):
     # unit of DURATION is [ms]
     OSCI_TRIGGER_DURATION = 100
     OSCI_TRIGGER_CHANNEL = 1
-    OUT2_CHANNEL = 2
+    OUT2_CHANNEL = 3
 
     def __init__(self, conf):
         super().__init__()
@@ -441,7 +441,7 @@ class MyWindow(QMainWindow):
                 [params['x_start'], params['x_stop'], params['x_step']],
                 [params['y_start'], params['y_stop'], params['y_step']],
                 [params['z_start'], params['z_stop'], params['z_step']],
-                params['settling_time'])
+                settling_time=params['settling_time'])
         self.setProgramData(prog)
 
 

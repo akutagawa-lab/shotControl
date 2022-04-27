@@ -37,7 +37,7 @@ class stageProgram:
 
         colname = 'out2'
         self.df[colname] = 0
-        one_flags = np.arange(len(self.df)) % (2 * inv_samples) > inv_samples
+        one_flags = np.arange(len(self.df)) % (2 * inv_samples) >= inv_samples
         self.df.loc[one_flags, colname] = 1
 
         
