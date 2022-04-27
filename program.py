@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 class stageProgram:
     '''ステージのプログラムクラス'''
     def __init__(self):
-        self.df = pd.DataFrame(columns=('pos_x', 'pos_y', 'pos_z', 'interval'))
+        self.df = pd.DataFrame(columns=('pos_x', 'pos_y', 'pos_z', 'settling_time'))
         self.gen_condition = {}    # 生成条件
 
-    def setPosition(self, xxx, yyy, zzz, interval=1):
+    def setPosition(self, xxx, yyy, zzz, settling_time=1):
         '''meshgrid で生成された numpy.ndarray からプログラムを生成'''
         xs = xxx.flatten()
         ys = yyy.flatten()
@@ -22,9 +22,9 @@ class stageProgram:
         self.df['pos_x'] = xs
         self.df['pos_y'] = ys
         self.df['pos_z'] = zs
-        self.df['interval'] = np.ones_like(xs) * interval
+        self.df['settling_time'] = np.ones_like(xs) * settling_time
 
-    def generateGridPosition(self, range_x, range_y, range_z, interval):
+    def generateGridPosition(self, range_x, range_y, range_z, settling_time):
         '''3次元格子状の位置を生成する。
 
         生成結果は stageProgram.df に収納される。
@@ -34,7 +34,7 @@ class stageProgram:
             range_x (list): x軸方向の範囲。[start, stop[, step]] の形のリスト
             range_y (list): y軸方向の範囲。[start, stop[, step]] の形のリスト
             range_z (list): z軸方向の範囲。[start, stop[, step]] の形のリスト
-            interval (float): インターバル時間
+            settling_time (float): セトリングタイム
         '''
         if len(range_x) < 3:
             range_x.append(1.0)
@@ -46,7 +46,7 @@ class stageProgram:
         yy = np.arange(range_y[0], range_y[1] + range_y[2], range_y[2])
         zz = np.arange(range_z[0], range_z[1] + range_z[2], range_z[2])
         xxx, yyy, zzz = np.meshgrid(xx, yy, zz)
-        self.setPosition(xxx, yyy, zzz, interval)
+        self.setPosition(xxx, yyy, zzz, settling_time)
 
     def paramByIndex(self, idx):
         '''インデックス指定でプログラムパラメータを取得'''
@@ -63,7 +63,7 @@ class stageProgram:
 
 def test_data(
         range_x=(10, 20), range_y=(100, 150), range_z=(30, 40),
-        pos_step=1, interval=1):
+        pos_step=1, settling_time=1):
     '''テストデータの作成'''
 
     prog = stageProgram()
@@ -74,7 +74,7 @@ def test_data(
 
     xxx, yyy, zzz = np.meshgrid(xx, yy, zz)
 
-    prog.setPosition(xxx, yyy, zzz, interval=interval)
+    prog.setPosition(xxx, yyy, zzz, settling_time=settling_time)
 
     return prog
 

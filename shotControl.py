@@ -61,8 +61,8 @@ class MyWindow(QMainWindow):
 
         self.query_timer = QtCore.QTimer()
         self.query_timer.timeout.connect(self.queryInfo)
-        self.interval_timer = QtCore.QTimer()
-        self.interval_timer.timeout.connect(self.intervalTimeup)
+        self.settling_timer = QtCore.QTimer()
+        self.settling_timer.timeout.connect(self.settlingTimeup)
         self.trigger_timer = QtCore.QTimer()
         self.trigger_timer.timeout.connect(self.triggerTimeup)
 
@@ -256,22 +256,22 @@ class MyWindow(QMainWindow):
                 if self.query_timer.isActive():
                     self.query_timer.stop()
                 if ((self.flag_prog_run is True) and (self.trigger_timer.isActive() is not True)):
-                    # interval_timer を開始
+                    # settling_timer を開始
                     cur_row = self.prog_table.currentRow()
                     param = self.program.paramByIndex(cur_row)
-                    interval = param['interval'] * 1000
-                    logging.debug("\tcur_row: %d: interval:%f",
-                                  cur_row, interval)
-                    self.interval_timer.start(interval)
+                    settling_time = param['settling_time'] * 1000
+                    logging.debug("\tcur_row: %d: settling_time:%f",
+                                  cur_row, settling_time)
+                    self.settling_timer.start(settling_time)
             else:
                 self.showStatus('Busy')
 
-    def intervalTimeup(self):
+    def settlingTimeup(self):
         ''' インターバルタイマーがTimeupしたときに呼ばれる。
             ポストインターバル処理の開始
         '''
-        logger.debug("intervalTimer()")
-        self.interval_timer.stop()
+        logger.debug("settlingTimer()")
+        self.settling_timer.stop()
 
         # オシロ用のトリガを出力
         self.trigger_timer.start(int(self.OSCI_TRIGGER_DURATION))
@@ -384,7 +384,7 @@ class MyWindow(QMainWindow):
         logger.debug(
                 "x:%f y:%f z:%f int:%f",
                 param['pos_x'], param['pos_y'],
-                param['pos_z'], param['interval'])
+                param['pos_z'], param['settling_time'])
 
     def actionCurrentCellChanged(self, cur_row, cur_col, prev_row, prev_col):
         ''' current cell（の位置）が変更されたときのaction '''
@@ -432,7 +432,7 @@ class MyWindow(QMainWindow):
                 [params['x_start'], params['x_stop'], params['x_step']],
                 [params['y_start'], params['y_stop'], params['y_step']],
                 [params['z_start'], params['z_stop'], params['z_step']],
-                params['interval'])
+                params['settling_time'])
         self.setProgramData(prog)
 
 
@@ -471,7 +471,7 @@ class MyWindow(QMainWindow):
         ''' stop program '''
         logger.debug("actionStopProgram")
         if self.flag_prog_run is True:
-            self.interval_timer.stop()
+            self.settling_timer.stop()
             self.flag_prog_run = False
             self.act_prog_run.setEnabled(True)
             self.act_prog_stop.setEnabled(False)

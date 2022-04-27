@@ -25,7 +25,7 @@ DEFAULT_PARAMS = {
         'x_start' : 10.0, 'x_stop' : 20.0, 'x_step' : 1.0,
         'y_start' : 100.0, 'y_stop' : 150.0, 'y_step' : 1.0,
         'z_start' : 30.0, 'z_stop' : 40.0, 'z_step' : 1.0,
-        'interval' : 1.0,
+        'settling_time' : 1.0,
         }
 
 class createProgramDialog(QDialog):
@@ -85,10 +85,10 @@ class createProgramDialog(QDialog):
         #for le in (self.le_x_num, self.le_y_num, self.le_z_num):
             #le.setValidator(QtGui.QIntValidator(1, 1000))
 
-        layout_interval = QHBoxLayout()
-        layout_interval.addWidget(QLabel("Interval [s]:"))
-        self.le_interval = QLineEdit()
-        layout_interval.addWidget(self.le_interval)
+        layout_settling_time = QHBoxLayout()
+        layout_settling_time.addWidget(QLabel("Settling time [s]:"))
+        self.le_settling_time = QLineEdit()
+        layout_settling_time.addWidget(self.le_settling_time)
 
         layout_axes.addWidget(self.le_x_start, 1, 1)
         layout_axes.addWidget(self.le_x_stop, 1, 2)
@@ -103,7 +103,7 @@ class createProgramDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.addLayout(layout_rb)
         layout.addLayout(layout_axes)
-        layout.addLayout(layout_interval)
+        layout.addLayout(layout_settling_time)
         layout.addWidget(buttonbox)
 
         self.le_x_start.setFocusPolicy(Qt.StrongFocus)
@@ -145,7 +145,7 @@ class createProgramDialog(QDialog):
         self.params['z_start'] = float(self.le_z_start.text())
         self.params['z_stop'] = float(self.le_z_stop.text())
         self.params['z_step'] = float(self.le_z_step.text())
-        self.params['interval'] = float(self.le_interval.text())
+        self.params['settling_time'] = float(self.le_settling_time.text())
 
     def storeParamsToConfig(self, conf):
         for k in DEFAULT_PARAMS.keys():
@@ -190,7 +190,7 @@ class createProgramDialog(QDialog):
         self.le_z_stop.setText(str(self.params['z_stop']))
         self.le_z_step.setText(str(self.params['z_step']))
 
-        self.le_interval.setText(str(self.params['interval']))
+        self.le_settling_time.setText(str(self.params['settling_time']))
 
 class testWindow(QMainWindow):
     def __init__(self):
