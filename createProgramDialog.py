@@ -26,6 +26,7 @@ DEFAULT_PARAMS = {
         'y_start' : 100.0, 'y_stop' : 150.0, 'y_step' : 1.0,
         'z_start' : 30.0, 'z_stop' : 40.0, 'z_step' : 1.0,
         'settling_time' : 1.0,
+        'repetition' : 1
         }
 
 class createProgramDialog(QDialog):

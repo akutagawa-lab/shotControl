@@ -35,6 +35,7 @@ class MyWindow(QMainWindow):
     # unit of DURATION is [ms]
     OSCI_TRIGGER_DURATION = 100
     OSCI_TRIGGER_CHANNEL = 1
+    OUT2_CHANNEL = 2
 
     def __init__(self, conf):
         super().__init__()
@@ -225,7 +226,7 @@ class MyWindow(QMainWindow):
     def stageMove(self, pos_x, pos_y, pos_z):
         '''指定された位置にステージを移動'''
         logging.debug(
-                "MoveTo: pos_x:%d, pos_y:%d, pos_z:%d", pos_x, pos_y, pos_z)
+                "stageMove: pos_x:%d, pos_y:%d, pos_z:%d", pos_x, pos_y, pos_z)
         self.stage.moveTo(pos_x, pos_y, pos_z)
         self.query_timer.start(self.QUERY_INTERVAL)
 
@@ -256,13 +257,21 @@ class MyWindow(QMainWindow):
                 if self.query_timer.isActive():
                     self.query_timer.stop()
                 if ((self.flag_prog_run is True) and (self.trigger_timer.isActive() is not True)):
-                    # settling_timer を開始
+                    # programの現在の行を取得
                     cur_row = self.prog_table.currentRow()
                     param = self.program.paramByIndex(cur_row)
+                    # settling_timer を開始
                     settling_time = param['settling_time'] * 1000
-                    logging.debug("\tcur_row: %d: settling_time:%f",
-                                  cur_row, settling_time)
                     self.settling_timer.start(settling_time)
+                    # OUT2 を出力
+                    out2 = param['out2']
+                    if out2 == 1:
+                        self.outputOn(self.OUT2_CHANNEL)
+                    else:
+                        self.outputOff(self.OUT2_CHANNEL)
+
+                    logging.debug("\tcur_row: %d: settling_time:%f, out2:%d",
+                                  cur_row, settling_time, out2)
             else:
                 self.showStatus('Busy')
 
@@ -514,8 +523,7 @@ def main():
         gui.stage.getInfo()
 
     gui.initPreset()
-
-    gui.setProgramData(program.test_data())
+    gui.actionNewProgram()
 
     status = app.exec_()
     config.updateFile(entire_conf)
