@@ -13,7 +13,7 @@ class stageProgram:
     def __init__(self):
         self.df = pd.DataFrame(
                 columns=('pos_x', 'pos_y', 'pos_z', 'settling_time',
-                    'repetitions', 'out2'))
+                    'repetitions', 'tick1'))
         self.gen_condition = {}    # 生成条件
 
     def setPosition(self, xxx, yyy, zzz, repetitions=1, settling_time=1):
@@ -27,15 +27,15 @@ class stageProgram:
         self.df['repetitions'] = np.ones_like(xs, dtype=int) * repetitions
         self.df['settling_time'] = np.ones_like(xs) * settling_time
 
-    def setFlippingIndicator(self, inv_samples):
-        ''' 反転指示値の生成。
+    def setTick(self, inv_samples, colname='tick1'):
+        ''' flip tickの生成。
 
-        OUT2 の生成用
+        Tick信号の生成用。flip tick は inv_samples 毎に反転する信号。
 
         Args:
-            inv_period (int): 出力が反転するサンプル数'''
+            inv_samples (int):        出力が反転するサンプル数
+            colname (str, optional): tickのカラム名。default: tick1'''
 
-        colname = 'out2'
         self.df[colname] = 0
         one_flags = np.arange(len(self.df)) % (2 * inv_samples) >= inv_samples
         self.df.loc[one_flags, colname] = 1
@@ -66,7 +66,33 @@ class stageProgram:
         zz = np.arange(range_z[0], range_z[1] + range_z[2], range_z[2])
         xxx, yyy, zzz = np.meshgrid(xx, yy, zz)
         self.setPosition(xxx, yyy, zzz, repetitions, settling_time)
-        self.setFlippingIndicator(len(zz + 1))
+        self.setTick(len(zz + 1))
+
+    def generateLinePosition(self, range_x, range_y, range_z, step,
+            repetitions=1, settling_time=1.0):
+        '''直線状の位置を生成する。
+
+        生成結果は stageProgram.df に格納される。
+        直線は始点から step 間隔で生成される。
+
+        Args:
+            range_x (list): x軸方向の範囲。[start, stop] の形のリスト
+            range_y (list): y軸方向の範囲。[start, stop] の形のリスト
+            range_z (list): z軸方向の範囲。[start, stop] の形のリスト
+            step:           測定位置の間隔
+            repetitions (int, optional): 測定繰り返し回数 default=1
+            settling_time (float): セトリングタイム default=1.0
+        '''
+        p1 = np.array([range_x[0], range_y[0], range_z[0]])
+        p2 = np.array([range_x[1], range_y[1], range_z[1]])
+        dist = np.linalg.norm(p2 - p1)
+        nsteps = int(dist / step)
+        dp = (p2 - p1) / dist * step
+        xxx = np.arange(nsteps + 1) * dp[0]
+        yyy = np.arange(nsteps + 1) * dp[1]
+        zzz = np.arange(nsteps + 1) * dp[2]
+        self.setPosition(xxx, yyy, zzz, repetitions, settling_time)
+        self.setTick(1)
 
     def paramByIndex(self, idx):
         '''インデックス指定でプログラムパラメータを取得'''

@@ -35,7 +35,7 @@ class MyWindow(QMainWindow):
     # unit of DURATION is [ms]
     OSCI_TRIGGER_DURATION = 100
     OSCI_TRIGGER_CHANNEL = 1
-    OUT2_CHANNEL = 3
+    TICK_CHANNEL = 3
 
     def __init__(self, conf):
         super().__init__()
@@ -263,15 +263,15 @@ class MyWindow(QMainWindow):
                     # settling_timer を開始
                     settling_time = param['settling_time'] * 1000
                     self.settling_timer.start(settling_time)
-                    # OUT2 を出力
-                    out2 = param['out2']
-                    if out2 == 1:
-                        self.outputOn(self.OUT2_CHANNEL)
+                    # tick を出力
+                    tick1 = param['tick1']
+                    if tick1 == 1:
+                        self.outputOn(self.TICK_CHANNEL)
                     else:
-                        self.outputOff(self.OUT2_CHANNEL)
+                        self.outputOff(self.TICK_CHANNEL)
 
-                    logging.debug("\tcur_row: %d: settling_time:%f, out2:%d",
-                                  cur_row, settling_time, out2)
+                    logging.debug("\tcur_row: %d: settling_time:%f, tick1:%d",
+                                  cur_row, settling_time, tick1)
             else:
                 self.showStatus('Busy')
 
@@ -416,7 +416,10 @@ class MyWindow(QMainWindow):
         self.tableSelectRow(row, column)
 
     def actionNewProgram(self):
-        ''' 新規プログラムの action '''
+        ''' 新規プログラムの action
+
+        createProgramDialog を表示して条件を入力し，
+        renewProgramを呼んでプログラムを入れ替える。'''
         logger.debug("actionNewProgram()")
         dlg = createProgramDialog.createProgramDialog(self)
         dlg.restoreParamsFromConfig(self.conf)
@@ -437,11 +440,19 @@ class MyWindow(QMainWindow):
         logger.debug('renewProgram()')
 
         prog = program.stageProgram()
-        prog.generateGridPosition(
-                [params['x_start'], params['x_stop'], params['x_step']],
-                [params['y_start'], params['y_stop'], params['y_step']],
-                [params['z_start'], params['z_stop'], params['z_step']],
-                settling_time=params['settling_time'])
+        if params['mode'] == createProgramDialog.PROGRAM_MODE_LINE:
+            prog.generateLinePosition(
+                    [params['x_start'], params['x_stop']],
+                    [params['y_start'], params['y_stop']],
+                    [params['z_start'], params['z_stop']],
+                    params['x_step'],
+                    settling_time=params['settling_time'])
+        elif params['mode'] == createProgramDialog.PROGRAM_MODE_CUBE:
+            prog.generateGridPosition(
+                    [params['x_start'], params['x_stop'], params['x_step']],
+                    [params['y_start'], params['y_stop'], params['y_step']],
+                    [params['z_start'], params['z_stop'], params['z_step']],
+                    settling_time=params['settling_time'])
         self.setProgramData(prog)
 
 
