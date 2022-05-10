@@ -101,7 +101,7 @@ class MyWindow(QMainWindow):
                 self.style().standardIcon(QStyle.SP_DialogCloseButton),
                 '&Quit', self)
         act_quit.setShortcut('Ctrl+Q')
-        act_quit.setToolTip('Quit application')
+        act_quit.setToolTip('Quit application (^Q)')
         act_quit.setStatusTip('Quit application')
         act_quit.triggered.connect(qApp.quit)
 
@@ -109,7 +109,7 @@ class MyWindow(QMainWindow):
                 self.style().standardIcon(QStyle.SP_MessageBoxInformation),
                 '&Status', self)
         act_query.setShortcut('Ctrl+I')
-        act_query.setToolTip('Query info.')
+        act_query.setToolTip('Query info. (^I)')
         act_query.setStatusTip('Query info.')
         act_query.triggered.connect(self.queryInfo)
 
@@ -117,7 +117,7 @@ class MyWindow(QMainWindow):
                 self.style().standardIcon(QStyle.SP_DialogApplyButton),
                 '&Go', self)
         act_go.setShortcut('Ctrl+G')
-        act_go.setToolTip('Go to destinate position')
+        act_go.setToolTip('Go to destinate position (^G)')
         act_go.setStatusTip('Go')
         act_go.triggered.connect(self.go)
 
@@ -125,7 +125,7 @@ class MyWindow(QMainWindow):
                 self.style().standardIcon(QStyle.SP_BrowserStop),
                 '&Stop', self)
         act_stop.setShortcut('Ctrl+T')
-        act_stop.setToolTip('Stop immediately')
+        act_stop.setToolTip('Stop immediately (^T)')
         act_stop.setStatusTip('Stop')
         act_stop.triggered.connect(self.stageStop)
 
@@ -133,7 +133,7 @@ class MyWindow(QMainWindow):
                 self.style().standardIcon(QStyle.SP_ArrowDown),
                 '&Next', self)
         act_prog_next.setShortcut('Ctrl+N')
-        act_prog_next.setToolTip('Next position')
+        act_prog_next.setToolTip('Next position (^N)')
         act_prog_next.setStatusTip('Next')
         act_prog_next.triggered.connect(self.progNextStep)
 
@@ -141,7 +141,7 @@ class MyWindow(QMainWindow):
                 self.style().standardIcon(QStyle.SP_ArrowUp),
                 '&Previous', self)
         act_prog_prev.setShortcut('Ctrl+P')
-        act_prog_prev.setToolTip('Previous position')
+        act_prog_prev.setToolTip('Previous position (^P)')
         act_prog_prev.setStatusTip('Previous')
         act_prog_prev.triggered.connect(self.progPrevStep)
 
@@ -149,14 +149,14 @@ class MyWindow(QMainWindow):
                 self.style().standardIcon(QStyle.SP_DialogOpenButton),
                 '&Open', self)
         act_prog_open.setShortcut('Ctrl+O')
-        act_prog_open.setStatusTip('Open program file')
+        act_prog_open.setStatusTip('Open program file (^O)')
         act_prog_open.triggered.connect(self.actionOpenProgram)
 
         act_prog_save = QAction(
                 self.style().standardIcon(QStyle.SP_DialogSaveButton),
                 '&Save', self)
         act_prog_save.setShortcut('Ctrl+S')
-        act_prog_save.setStatusTip('Save program as ...')
+        act_prog_save.setStatusTip('Save program as ... (^S)')
         act_prog_save.triggered.connect(self.actionSaveProgram)
 
         act_prog_new = QAction(
@@ -170,7 +170,8 @@ class MyWindow(QMainWindow):
         self.act_prog_run = QAction(
                 self.style().standardIcon(QStyle.SP_MediaPlay),
                 '&Run', self)
-        self.act_prog_run.setToolTip('Run program')
+        self.act_prog_run.setShortcut('Ctrl+R')
+        self.act_prog_run.setToolTip('Run program (^R)')
         self.act_prog_run.setStatusTip('Run program')
         self.act_prog_run.triggered.connect(self.actionRun)
 
