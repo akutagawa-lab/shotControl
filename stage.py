@@ -52,14 +52,18 @@ class stage():
         self.ser.stopbits = serial.STOPBITS_ONE
         self.ser.timeout = 5
 
-        try:
-            self.ser.open()
-            self.phantom_port = False
+        s_devs = get_device_list()
+        if portname in s_devs:
+            try:
+                self.ser.open()
+                self.phantom_port = False
 
-        except serial.SerialException:
-            logger.info(
-                    "stage.open():"
-                    "%s cannot open. Phoantom port will be used.", portname)
+            except serial.SerialException:
+                logger.info(
+                        "stage.open():"
+                        "%s cannot open. Phoantom port will be used.", portname)
+                self.phantom_port = True
+        else:
             self.phantom_port = True
 
     def toPulses(self, length_mm):
