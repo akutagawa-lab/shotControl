@@ -28,6 +28,13 @@ import createProgramDialog
 logger = logging.getLogger(__name__)
 
 
+APP_NAME = "shotControl"
+VENDER_NAME = "makutaga"
+
+DEFAULT_PARAMS = {
+        'device_name': 'Unknown',
+        }
+
 class MyWindow(QMainWindow):
     ''' メインウィンドウ '''
     QUERY_INTERVAL = 250
@@ -36,14 +43,15 @@ class MyWindow(QMainWindow):
     OSCI_TRIGGER_DURATION = 100
     OSCI_TRIGGER_CHANNEL = 1
     TICK_CHANNEL = 3
+    DEFAULT_APP_WIN_SIZE_VS_SCREEN = 0.75
 
-    def __init__(self, conf):
+    def __init__(self, conf, desktop):
         super().__init__()
 
         self.conf = conf
         self.title = 'SHOT-304GS Controller'
-        self.width = 800
-        self.height = 600
+        # self.width = 800
+        # self.height = 600
         self.device_name = None
         self.flag_prog_run = False
 
@@ -51,14 +59,7 @@ class MyWindow(QMainWindow):
         self.program = program.stageProgram()
 
         self.initUI()
-
-        dlg_port = portSettingDialog.portSettingDialog(self,
-                candidate_device=self.conf['device_name'])
-        if dlg_port.exec_() == QDialog.Accepted:
-            self.device_name = dlg_port.selectedPort()
-            self.conf['device_name'] = self.device_name
-        else:
-            self.device_name = None
+        self.setupWindowAppearance(desktop)
 
         self.query_timer = QtCore.QTimer()
         self.query_timer.timeout.connect(self.queryInfo)
@@ -71,8 +72,6 @@ class MyWindow(QMainWindow):
 
     def initUI(self):
         ''' UIの初期化 '''
-        self.setWindowTitle(self.title)
-        self.setGeometry(0, 0, self.width, self.height)
         win = QWidget()
         # 全体はQVBoxLayout
         # posi_con : positionController
@@ -103,7 +102,8 @@ class MyWindow(QMainWindow):
         act_quit.setShortcut('Ctrl+Q')
         act_quit.setToolTip('Quit application (^Q)')
         act_quit.setStatusTip('Quit application')
-        act_quit.triggered.connect(qApp.quit)
+        # act_quit.triggered.connect(qApp.quit)
+        act_quit.triggered.connect(self.close)
 
         act_query = QAction(
                 self.style().standardIcon(QStyle.SP_MessageBoxInformation),
@@ -214,6 +214,36 @@ class MyWindow(QMainWindow):
         self.toolbar.addAction(self.act_prog_run)
 
         self.show()
+
+    def setupWindowAppearance(self, desktop):
+        ''' 起動時にウィンドウを整える '''
+
+        self.setWindowTitle(self.title)
+
+        rect = desktop.screenGeometry(self)
+        startup_geom = QtCore.QRect(0, 0,
+                int(rect.width() * self.DEFAULT_APP_WIN_SIZE_VS_SCREEN),
+                int(rect.height() * self.DEFAULT_APP_WIN_SIZE_VS_SCREEN))
+        if 'app_width' in self.conf:
+            startup_geom.setWidth(int(self.conf['app_width']))
+        if 'app_height' in self.conf:
+            startup_geom.setHeight(int(self.conf['app_height']))
+        startup_geom.moveCenter(rect.center())
+        self.setGeometry(startup_geom)
+
+#    def resizeEvent(self, ev):
+#        ''' リサイズイベント
+#
+#        ウィンドウサイズをプリファレンスファイルに記録したいが，
+#        リサイズのたびに記録するのは過剰か '''
+#        logging.debug("resizeEvent: size.w:%d size.h:%d", ev.size().width(), ev.size().height())
+
+    def closeEvent(self, ev):
+        ''' close event '''
+        logging.debug("closeEvent")
+
+        self.conf['app_width'] = str(self.width())
+        self.conf['app_height'] = str(self.height())
 
     def showStatus(self, msg=""):
         ''' status bar に情報表示 '''
@@ -532,13 +562,26 @@ class MyWindow(QMainWindow):
         logger.debug("actionOutputOff: %d", ch)
         self.outputOff(ch)
 
+    def selectSerialPort(self):
+        ''' シリアルポートの選択 '''
+
+        dlg_port = portSettingDialog.portSettingDialog(self,
+                candidate_device=self.conf['device_name'])
+        if dlg_port.exec_() == QDialog.Accepted:
+            self.device_name = dlg_port.selectedPort()
+            self.conf['device_name'] = self.device_name
+        else:
+            self.device_name = None
+
 def main():
     ''' メイン関数 '''
-    entire_conf = config.readFile()
+    entire_conf = config.readFile(
+            appname=APP_NAME, vender=VENDER_NAME, defaults=DEFAULT_PARAMS)
     conf = entire_conf[gethostname()]
 
     app = QApplication(sys.argv)
-    gui = MyWindow(conf)
+    gui = MyWindow(conf, app.desktop())
+    gui.selectSerialPort()
     if gui.device_name is None:
         sys.exit()
     else:
@@ -551,7 +594,7 @@ def main():
     gui.actionNewProgram()
 
     status = app.exec_()
-    config.updateFile(entire_conf)
+    config.updateFile(entire_conf, appname=APP_NAME, vender=VENDER_NAME)
     sys.exit(status)
 
 
